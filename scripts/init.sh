@@ -3,21 +3,13 @@ set -Eeuo pipefail
 
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # shellcheck source=./common/shared.sh
 source "${SCRIPT_DIR}/common/shared.sh"
-
-BACKEND_DIR="${ROOT_DIR}/backend/.easyrsa"
-EASYRSA_BIN="${BACKEND_DIR}/easyrsa"
-
-CONFIG_DIR="${ROOT_DIR}/config"
-RUNTIME_DIR="${ROOT_DIR}/runtime"
-OUTPUT_DIR="${ROOT_DIR}/output"
-
-EASYRSA_CONFIG_DIR="${CONFIG_DIR}/easyrsa"
-SSL_RUNTIME_DIR="${RUNTIME_DIR}/ssl/pki"
-SSL_OUTPUT_DIR="${OUTPUT_DIR}/certs"
+# shellcheck source=./common/paths.sh
+source "${SCRIPT_DIR}/common/paths.sh"
+# shellcheck source=./common/easyrsa-prepare.sh
+source "${SCRIPT_DIR}/common/easyrsa-prepare.sh"
 
 show_help() {
   cat <<EOF
@@ -37,28 +29,25 @@ prepare_dir() {
 }
 
 init_easyrsa() {
-  # shellcheck source=./common/shared.sh
-  source "${SCRIPT_DIR}/common/easyrsa-init.sh"
-
   if easyrsa_path="$(find_easyrsa "${EASYRSA_PATH:-}")"; then
-    ln -sfn "$easyrsa_path" "${ROOT_DIR}/backend/.easyrsa"
+    ln -sfn "$easyrsa_path" "${EASYRSA_DIR}"
   fi
 
-  need_dir "${BACKEND_DIR}"
+  need_dir "${EASYRSA_DIR}"
   need_file "${EASYRSA_BIN}"
 
-  prepare_dir "${SSL_RUNTIME_DIR}"
   prepare_dir "${EASYRSA_CONFIG_DIR}"
   prepare_dir "${SSL_OUTPUT_DIR}"
 
-  # EasyRSA / OpenSSL compatibility seed file
-  openssl rand -writerand "${SSL_RUNTIME_DIR}/.rnd"
+  export EASYRSA_PKI="${SSL_PKI_DIR}"
 
-  export EASYRSA_PKI="${SSL_RUNTIME_DIR}"
-
-  if [[ ! -d "${SSL_RUNTIME_DIR}/private" ]]; then
+  if [[ ! -d "${SSL_PKI_DIR}/private" ]]; then
     info "Initializing EasyRSA PKI..."
+    # Ensure directory is empty/clean for init-pki to avoid confirmation prompt
+    rm -rf "${SSL_PKI_DIR}"
+    # EasyRSA / OpenSSL compatibility seed file
     "${EASYRSA_BIN}" init-pki
+    openssl rand -writerand "${SSL_PKI_DIR}/.rnd"
   else
     info "EasyRSA PKI already exists: ${EASYRSA_PKI}"
   fi
@@ -81,11 +70,11 @@ main() {
   init_easyrsa
 
   info "Workspace ready."
-  info "Backend: ${BACKEND_DIR}"
+  info "EasyRSA: ${EASYRSA_DIR}"
   info "Config:  ${CONFIG_DIR}"
   info "Runtime: ${RUNTIME_DIR}"
   info "Output:  ${OUTPUT_DIR}"
-  info "EasyRSA: ${EASYRSA_PKI}"
+  info "SSL-PKI: ${EASYRSA_PKI}"
 }
 
 main "$@"

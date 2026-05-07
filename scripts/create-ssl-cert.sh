@@ -37,29 +37,12 @@ set -Eeuo pipefail
 # Config (can be overridden via CLI flags)
 # -----------------------------
 SCRIPT_NAME="$(basename "$0")"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-CONFIG_DIR="${ROOT_DIR}/config"
-OUTPUT_DIR="${ROOT_DIR}/output"
-RUNTIME_DIR="${ROOT_DIR}/runtime"
 
-EASYRSA_DIR="${ROOT_DIR}/backend/.easyrsa"
-
-SSL_CONFIG_DIR="${CONFIG_DIR}/ca/ssl"
-VPN_CONFIG_DIR="${CONFIG_DIR}/ca/vpn"
-
-EASYRSA_BIN="${EASYRSA_DIR}/easyrsa"
-
-EXISTING_CA_DIR="${SSL_CONFIG_DIR}"
-VARS_FILE="${CONFIG_DIR}/easyrsa/vars"
-
-PKI_DIR="${RUNTIME_DIR}/ssl/pki"
-PKI_PRIVATE_DIR="${PKI_DIR}/private"
+# shellcheck source=./common/paths.sh
+source "${SCRIPT_DIR}/common/paths.sh"
 
 export EASYRSA_PKI="${PKI_DIR}"
-
-OUT_DIR="${OUTPUT_DIR}/certs"
 
 WILDCARD="false"
 CLEAN_ONLY="false"
@@ -390,7 +373,7 @@ create_ssl_cert() {
 
   if [[ "${ARCHIVE}" == "true" ]]; then
     info "\nCreating archive..."
-    ( cd "${OUT_DIR}" && 7z a -t7z "${safe_name}.7z" "${safe_name}" >/dev/null )
+    ( cd "$(dirname "${OUT_DIR}")" && 7z a -t7z "${safe_name}.7z" "${safe_name}" >/dev/null )
     info "Done. Archive: ${OUT_DIR}/${safe_name}.7z"
   else
     info "\nDone. (Archive skipped)"
