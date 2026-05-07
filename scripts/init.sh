@@ -45,6 +45,7 @@ init_easyrsa() {
   prepare_dir "${SSL_OUTPUT_DIR}"
 
   init_pki_structure "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
+  prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
 }
 
 run_init() {

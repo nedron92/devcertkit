@@ -41,6 +41,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common/paths.sh"
 export EASYRSA_PKI="${SSL_PKI_DIR}"
 
+# shellcheck source=./common/easyrsa-prepare.sh
+source "${SCRIPT_DIR}/common/easyrsa-prepare.sh"
+
 WILDCARD="false"
 CLEAN_ONLY="false"
 ARCHIVE="true"   	# if false -> skip 7z
@@ -276,16 +279,8 @@ init_pki_if_missing() {
     # EasyRSA expects a CA structure during initialization.
     # The generated CA is replaced immediately afterwards
     # with the configured existing CA files.
-	"${EASYRSA_BIN}" build-ca nopass
+    prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
   fi
-}
-
-copy_old_ca() {
-  info "Copying existing CA files into PKI..."
-  cp -f "${SSL_CONFIG_DIR}/ca.crt" "${SSL_PKI_DIR}/ca.crt"
-  cp -f "${SSL_CONFIG_DIR}/ca.key" "${SSL_PKI_PRIVATE_DIR}/ca.key"
-  cp -f "${VARS_FILE}" "${SSL_PKI_DIR}/vars"
-  info "CA files copied."
 }
 
 # -----------------------------
@@ -293,7 +288,6 @@ copy_old_ca() {
 # -----------------------------
 create_ssl_cert() {
   init_pki_if_missing
-  copy_old_ca
 
   local base_domain="${DOMAINS[0]}"
 
