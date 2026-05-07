@@ -1,4 +1,4 @@
-find_easyrsa() {
+resolve_easyrsa() {
   local user_path="${1:-}"
 
   if [[ -n "$user_path" ]]; then
@@ -20,5 +20,5 @@ find_easyrsa() {
     fi
   done
 
-  return 1
+  fail "EasyRSA not found in system paths. Please provide --easyrsa-path <path>"
 }
