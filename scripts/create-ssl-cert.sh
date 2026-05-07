@@ -39,6 +39,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=./common/paths.sh
 source "${SCRIPT_DIR}/common/paths.sh"
+export EASYRSA_PKI="${SSL_PKI_DIR}"
 
 WILDCARD="false"
 CLEAN_ONLY="false"
