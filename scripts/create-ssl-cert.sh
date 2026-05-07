@@ -28,8 +28,6 @@
 
 # TODO:
 # - replace temporary .rnd workaround
-# - move helpers into common.sh
-# - add init/bootstrap workflow
 
 set -Eeuo pipefail
 
