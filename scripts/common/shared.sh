@@ -9,10 +9,14 @@ info() {
   echo "$*"
 }
 
-need_file() {
+check_file() {
   [[ -f "$1" ]] || fail "Missing file: $1"
 }
 
-need_dir() {
+check_dir() {
   [[ -d "$1" ]] || fail "Missing directory: $1"
+}
+
+prepare_dir() {
+  mkdir -p "$1"
 }

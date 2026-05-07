@@ -27,10 +27,3 @@ VPN_CONFIG_DIR="${CONFIG_DIR}/ca/vpn"
 VPN_PKI_DIR="${RUNTIME_DIR}/vpn/pki"
 VPN_PKI_PRIVATE_DIR="${VPN_PKI_DIR}/private"
 VPN_OUTPUT_DIR="${OUTPUT_DIR}/clients"
-
-# Aliases for backward compatibility in scripts
-PKI_DIR="${SSL_PKI_DIR}"
-PKI_PRIVATE_DIR="${SSL_PKI_DIR}/private"
-
-OUT_DIR="${SSL_OUTPUT_DIR}"
-EXISTING_CA_DIR="${SSL_CONFIG_DIR}"

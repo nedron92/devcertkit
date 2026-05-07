@@ -4,6 +4,7 @@ set -Eeuo pipefail
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+## Load variables and basic functionality
 # shellcheck source=./common/shared.sh
 source "${SCRIPT_DIR}/common/shared.sh"
 # shellcheck source=./common/paths.sh
@@ -11,6 +12,7 @@ source "${SCRIPT_DIR}/common/paths.sh"
 # shellcheck source=./common/easyrsa-prepare.sh
 source "${SCRIPT_DIR}/common/easyrsa-prepare.sh"
 
+##
 show_help() {
   cat <<EOF
 Usage: ./${SCRIPT_NAME}
@@ -24,19 +26,14 @@ This command:
 EOF
 }
 
-prepare_dir() {
-  mkdir -p "$1"
-}
-
 init_easyrsa() {
   if easyrsa_path="$(find_easyrsa "${EASYRSA_PATH:-}")"; then
     ln -sfn "$easyrsa_path" "${EASYRSA_DIR}"
   fi
 
-  need_dir "${EASYRSA_DIR}"
-  need_file "${EASYRSA_BIN}"
+  check_dir "${EASYRSA_DIR}"
+  check_file "${EASYRSA_BIN}"
 
-  prepare_dir "${EASYRSA_CONFIG_DIR}"
   prepare_dir "${SSL_OUTPUT_DIR}"
 
   export EASYRSA_PKI="${SSL_PKI_DIR}"
@@ -63,7 +60,6 @@ main() {
 
   info "Initializing devcertkit workspace..."
 
-  prepare_dir "${CONFIG_DIR}"
   prepare_dir "${RUNTIME_DIR}"
   prepare_dir "${OUTPUT_DIR}"
 
@@ -71,7 +67,6 @@ main() {
 
   info "Workspace ready."
   info "EasyRSA: ${EASYRSA_DIR}"
-  info "Config:  ${CONFIG_DIR}"
   info "Runtime: ${RUNTIME_DIR}"
   info "Output:  ${OUTPUT_DIR}"
   info "SSL-PKI: ${EASYRSA_PKI}"

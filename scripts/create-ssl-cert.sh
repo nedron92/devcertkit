@@ -42,8 +42,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./common/paths.sh
 source "${SCRIPT_DIR}/common/paths.sh"
 
-export EASYRSA_PKI="${PKI_DIR}"
-
 WILDCARD="false"
 CLEAN_ONLY="false"
 ARCHIVE="true"   	# if false -> skip 7z
@@ -70,11 +68,11 @@ need_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "Missing dependency: '$1'"
 }
 
-need_file() {
+check_file() {
   [[ -f "$1" ]] || die "Missing file: $1"
 }
 
-need_dir() {
+check_dir() {
   [[ -d "$1" ]] || die "Missing directory: $1"
 }
 
@@ -217,8 +215,8 @@ Options:
       --clean             Delete the PKI directory and exit.
       --batch             Run EasyRSA in batch mode (non-interactive) if supported.
       --no-archive        Do not create a 7z archive.
-      --out-dir <path>    Output directory (default: ${OUT_DIR})
-      --ca-dir <path>     Existing CA directory (default: ${EXISTING_CA_DIR})
+      --out-dir <path>    Output directory (default: ${SSL_OUTPUT_DIR})
+      --ca-dir <path>     Existing CA directory (default: ${SSL_CONFIG_DIR})
   -h, --help              Show this help message.
 
 Examples:
@@ -255,7 +253,7 @@ EOF
 ensure_environment() {
   [[ ${#DOMAINS[@]} -gt 0 ]] || die "Please provide at least one domain using -d/--domain."
 
-  need_file "${EASYRSA_BIN}"
+  check_file "${EASYRSA_BIN}"
 
   # If archiving is enabled, ensure 7z exists
   if [[ "${ARCHIVE}" == "true" ]]; then
@@ -263,18 +261,18 @@ ensure_environment() {
   fi
 
   # Existing CA prerequisites
-  need_dir "${EXISTING_CA_DIR}"
-  need_file "${EXISTING_CA_DIR}/ca.crt"
-  need_file "${EXISTING_CA_DIR}/ca.key"
-  need_file "${VARS_FILE}"
+  check_dir "${SSL_CONFIG_DIR}"
+  check_file "${SSL_CONFIG_DIR}/ca.crt"
+  check_file "${SSL_CONFIG_DIR}/ca.key"
+  check_file "${VARS_FILE}"
 }
 
 init_pki_if_missing() {
   # Initialize PKI and Build CA if PKI is missing
-  if [[ ! -d "${PKI_DIR}" || ! -d "${PKI_PRIVATE_DIR}" || ! -f "${PKI_DIR}/vars" ]]; then
+  if [[ ! -d "${SSL_PKI_DIR}" || ! -d "${SSL_PKI_PRIVATE_DIR}" || ! -f "${SSL_PKI_DIR}/vars" ]]; then
     info "Initializing PKI..."
     "${EASYRSA_BIN}" init-pki
-    openssl rand -writerand "${PKI_DIR}/.rnd"
+    openssl rand -writerand "${SSL_PKI_DIR}/.rnd"
 
     # EasyRSA expects a CA structure during initialization.
     # The generated CA is replaced immediately afterwards
@@ -285,9 +283,9 @@ init_pki_if_missing() {
 
 copy_old_ca() {
   info "Copying existing CA files into PKI..."
-  cp -f "${EXISTING_CA_DIR}/ca.crt" "${PKI_DIR}/ca.crt"
-  cp -f "${EXISTING_CA_DIR}/ca.key" "${PKI_PRIVATE_DIR}/ca.key"
-  cp -f "${VARS_FILE}" "${PKI_DIR}/vars"
+  cp -f "${SSL_CONFIG_DIR}/ca.crt" "${SSL_PKI_DIR}/ca.crt"
+  cp -f "${SSL_CONFIG_DIR}/ca.key" "${SSL_PKI_PRIVATE_DIR}/ca.key"
+  cp -f "${VARS_FILE}" "${SSL_PKI_DIR}/vars"
   info "CA files copied."
 }
 
@@ -320,7 +318,7 @@ create_ssl_cert() {
   safe_name="$(sanitize_name "${cn}")"
 
   # Export output target
-  mkdir -p "${OUT_DIR}/${safe_name}"
+  mkdir -p "${SSL_OUTPUT_DIR}/${safe_name}"
 
   info "\nGenerating request for base domain '${base_domain}' (wildcard: ${WILDCARD})..."
   info "  CN:  ${cn}"
@@ -342,39 +340,39 @@ create_ssl_cert() {
   info "Finished signing."
 
   # Copy generated files
-  local issued_crt="${PKI_DIR}/issued/${cn}.crt"
-  local private_key="${PKI_DIR}/private/${cn}.key"
+  local issued_crt="${SSL_PKI_DIR}/issued/${cn}.crt"
+  local private_key="${SSL_PKI_DIR}/private/${cn}.key"
 
-  need_file "${issued_crt}"
-  need_file "${private_key}"
+  check_file "${issued_crt}"
+  check_file "${private_key}"
 
-  cp -f "${issued_crt}" "${OUT_DIR}/${safe_name}/${safe_name}.crt"
-  cp -f "${private_key}" "${OUT_DIR}/${safe_name}/${safe_name}.key"
+  cp -f "${issued_crt}" "${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.crt"
+  cp -f "${private_key}" "${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.key"
   
   if [[ "${INCLUDE_CA}" == "true" ]]; then
-	cp -f "${PKI_DIR}/ca.crt" "${OUT_DIR}/${safe_name}/ca.crt"
+	cp -f "${SSL_PKI_DIR}/ca.crt" "${SSL_OUTPUT_DIR}/${safe_name}/ca.crt"
   fi
 
   info "\nWrote:"
-  info "  ${OUT_DIR}/${safe_name}/${safe_name}.crt"
-  info "  ${OUT_DIR}/${safe_name}/${safe_name}.key"
+  info "  ${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.crt"
+  info "  ${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.key"
   
   if [[ "${INCLUDE_CA}" == "true" ]]; then
-	info "  ${OUT_DIR}/${safe_name}/ca.crt"
+	info "  ${SSL_OUTPUT_DIR}/${safe_name}/ca.crt"
   fi
   
   if [[ "${OPENWRT}" == "true" ]]; then
-	rename_to_openwrt_uhttpd_files "${safe_name}" "${OUT_DIR}/${safe_name}"
+	rename_to_openwrt_uhttpd_files "${safe_name}" "${SSL_OUTPUT_DIR}/${safe_name}"
   fi
   
   if [[ "${CREATE_PEM}" == "true" ]]; then
-	create_pem_bundle "${safe_name}" "${OUT_DIR}/${safe_name}"
+	create_pem_bundle "${safe_name}" "${SSL_OUTPUT_DIR}/${safe_name}"
   fi
 
   if [[ "${ARCHIVE}" == "true" ]]; then
     info "\nCreating archive..."
-    ( cd "$(dirname "${OUT_DIR}")" && 7z a -t7z "${safe_name}.7z" "${safe_name}" >/dev/null )
-    info "Done. Archive: ${OUT_DIR}/${safe_name}.7z"
+    ( cd "$(dirname "${SSL_OUTPUT_DIR}")" && 7z a -t7z "${safe_name}.7z" "${safe_name}" >/dev/null )
+    info "Done. Archive: ${SSL_OUTPUT_DIR}/${safe_name}.7z"
   else
     info "\nDone. (Archive skipped)"
   fi
@@ -420,12 +418,12 @@ while [[ $# -gt 0 ]]; do
       ;;
     --out-dir)
       [[ -n "${2:-}" ]] || die "Missing value for $1"
-      OUT_DIR="$2"
+      SSL_OUTPUT_DIR="$2"
       shift 2
       ;;
     --ca-dir)
       [[ -n "${2:-}" ]] || die "Missing value for $1"
-      EXISTING_CA_DIR="$2"
+      SSL_CONFIG_DIR="$2"
       shift 2
       ;;
     -h|--help)
@@ -439,8 +437,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ "${CLEAN_ONLY}" == "true" ]]; then
-  rm -rf "${PKI_DIR}"
-  echo "Deleted PKI dir: ${PKI_DIR}"
+  rm -rf "${SSL_PKI_DIR}"
+  echo "Deleted PKI dir: ${SSL_PKI_DIR}"
   exit 0
 fi
 
