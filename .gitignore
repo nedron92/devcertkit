@@ -39,7 +39,8 @@
  .vscode/
 
  # JetBrains
- .idea/
+/.idea/
 
  # Vim
  *.swp
+
