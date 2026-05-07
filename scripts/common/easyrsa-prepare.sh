@@ -8,14 +8,14 @@ resolve_easyrsa() {
     return 0
   fi
 
-  local candidate
-  for candidate in \
+  local system_path
+  for system_path in \
     /usr/share/easy-rsa \
     /usr/share/easy-rsa3 \
     /usr/share/easyrsa
   do
-    if [[ -x "$candidate/easyrsa" ]]; then
-      echo "$candidate"
+    if [[ -x "$system_path/easyrsa" ]]; then
+      echo "$system_path"
       return 0
     fi
   done
