@@ -22,3 +22,20 @@ resolve_easyrsa() {
 
   fail "EasyRSA not found in system paths. Please provide --easyrsa-path <path>"
 }
+
+init_pki_structure() {
+  local pki_dir="${1:?PKI directory is required}"
+  local pki_private_dir="${2:?PKI/private directory is required}"
+
+  if [[ -d "${pki_dir}" && -d "${pki_private_dir}" ]]; then
+    info " EasyRSA PKI already exists: ${pki_dir}"
+  else
+    info "Initializing EasyRSA PKI in ${pki_dir}..."
+    # Ensure directory is empty/clean for init-pki to avoid confirmation prompt
+    rm -rf "${pki_dir}"
+    # EasyRSA / OpenSSL compatibility seed file
+    export EASYRSA_PKI="${pki_dir}"
+    "${EASYRSA_BIN}" init-pki
+    openssl rand -writerand "${pki_dir}/.rnd"
+  fi
+}

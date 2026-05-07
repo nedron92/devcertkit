@@ -6,7 +6,7 @@ fail() {
 }
 
 info() {
-  echo "$*"
+  echo -e "$*"
 }
 
 check_file() {
