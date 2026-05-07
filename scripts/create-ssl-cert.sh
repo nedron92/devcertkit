@@ -37,6 +37,9 @@ set -Eeuo pipefail
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# shellcheck source=./common/shared.sh
+source "${SCRIPT_DIR}/common/shared.sh"
+
 # shellcheck source=./common/paths.sh
 source "${SCRIPT_DIR}/common/paths.sh"
 export EASYRSA_PKI="${SSL_PKI_DIR}"
@@ -57,27 +60,6 @@ DOMAINS=()
 # -----------------------------
 # Helpers
 # -----------------------------
-die() {
-  echo "Error: $*" >&2
-  exit 1
-}
-
-info() {
-  echo -e "$*"
-}
-
-need_cmd() {
-  command -v "$1" >/dev/null 2>&1 || die "Missing dependency: '$1'"
-}
-
-check_file() {
-  [[ -f "$1" ]] || die "Missing file: $1"
-}
-
-check_dir() {
-  [[ -d "$1" ]] || die "Missing directory: $1"
-}
-
 cleanup_on_error() {
   local exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
@@ -151,8 +133,8 @@ rename_to_openwrt_uhttpd_files() {
   local dst_crt="${cert_dir}/uhttpd.crt"
   local dst_key="${cert_dir}/uhttpd.key"
 
-  [[ -f "$src_crt" ]] || die "Missing certificate to rename: $src_crt"
-  [[ -f "$src_key" ]] || die "Missing key to rename: $src_key"
+  [[ -f "$src_crt" ]] || fail "Missing certificate to rename: $src_crt"
+  [[ -f "$src_key" ]] || fail "Missing key to rename: $src_key"
 
   mv -f "$src_crt" "$dst_crt"
   mv -f "$src_key" "$dst_key"
@@ -189,8 +171,8 @@ create_pem_bundle() {
     pem_file="${cert_dir}/${domain}.pem"
   fi
 
-  [[ -f "$crt_file" ]] || die "Missing certificate for PEM bundle: $crt_file"
-  [[ -f "$key_file" ]] || die "Missing key for PEM bundle: $key_file"
+  [[ -f "$crt_file" ]] || fail "Missing certificate for PEM bundle: $crt_file"
+  [[ -f "$key_file" ]] || fail "Missing key for PEM bundle: $key_file"
 
   # Write cert + key into a single PEM file (order is commonly cert first, then key)
   cat "$crt_file" "$key_file" > "$pem_file"
@@ -253,7 +235,7 @@ EOF
 # Environment checks & setup
 # -----------------------------
 ensure_environment() {
-  [[ ${#DOMAINS[@]} -gt 0 ]] || die "Please provide at least one domain using -d/--domain."
+  [[ ${#DOMAINS[@]} -gt 0 ]] || fail "Please provide at least one domain using -d/--domain."
 
   check_file "${EASYRSA_BIN}"
 
@@ -269,26 +251,10 @@ ensure_environment() {
   check_file "${VARS_FILE}"
 }
 
-init_pki_if_missing() {
-  # Initialize PKI and Build CA if PKI is missing
-  if [[ ! -d "${SSL_PKI_DIR}" || ! -d "${SSL_PKI_PRIVATE_DIR}" || ! -f "${SSL_PKI_DIR}/vars" ]]; then
-    info "Initializing PKI..."
-    "${EASYRSA_BIN}" init-pki
-    openssl rand -writerand "${SSL_PKI_DIR}/.rnd"
-
-    # EasyRSA expects a CA structure during initialization.
-    # The generated CA is replaced immediately afterwards
-    # with the configured existing CA files.
-    prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
-  fi
-}
-
 # -----------------------------
 # Main operation
 # -----------------------------
 create_ssl_cert() {
-  init_pki_if_missing
-
   local base_domain="${DOMAINS[0]}"
 
   # Determine CN and SANs
@@ -377,7 +343,7 @@ create_ssl_cert() {
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -d|--domain)
-      [[ -n "${2:-}" ]] || die "Missing value for $1"
+      [[ -n "${2:-}" ]] || fail "Missing value for $1"
       DOMAINS+=("$2")
       shift 2
       ;;
@@ -410,12 +376,12 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --out-dir)
-      [[ -n "${2:-}" ]] || die "Missing value for $1"
+      [[ -n "${2:-}" ]] || fail "Missing value for $1"
       SSL_OUTPUT_DIR="$2"
       shift 2
       ;;
     --ca-dir)
-      [[ -n "${2:-}" ]] || die "Missing value for $1"
+      [[ -n "${2:-}" ]] || fail "Missing value for $1"
       SSL_CONFIG_DIR="$2"
       shift 2
       ;;
@@ -424,7 +390,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      die "Unknown option: $1 (use -h/--help)"
+      fail "Unknown option: $1 (use -h/--help)"
       ;;
   esac
 done
