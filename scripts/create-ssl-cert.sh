@@ -248,7 +248,10 @@ ensure_environment() {
   check_dir "${SSL_CONFIG_DIR}"
   check_file "${SSL_CONFIG_DIR}/ca.crt"
   check_file "${SSL_CONFIG_DIR}/ca.key"
-  check_file "${VARS_FILE}"
+  
+  local vars_file
+  vars_file=$(get_ssl_vars_file)
+  check_file "${vars_file}"
 }
 
 # -----------------------------

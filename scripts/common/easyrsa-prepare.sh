@@ -37,7 +37,27 @@ init_pki_structure() {
     export EASYRSA_PKI="${pki_dir}"
     "${EASYRSA_BIN}" init-pki
     openssl rand -writerand "${pki_dir}/.rnd"
+    
+    # Copy correct vars file
+    copy_ssl_vars "${pki_dir}"
   fi
+}
+
+get_ssl_vars_file() {
+  if [[ -f "${SSL_VARS_FILE}" ]]; then
+    echo "${SSL_VARS_FILE}"
+  else
+    echo "${SSL_VARS_FILE_DEFAULT}"
+  fi
+}
+
+copy_ssl_vars() {
+  local pki_dir="${1:?PKI directory is required}"
+  local vars_file
+  vars_file=$(get_ssl_vars_file)
+  
+  info "Using vars-file: ${vars_file}"
+  cp -f "${vars_file}" "${pki_dir}/vars"
 }
 
 prepare_ca() {
@@ -65,14 +85,14 @@ prepare_ca() {
     # Overwrite the generated CA files with the ones from config
     cp -f "${ca_crt}" "${pki_dir}/ca.crt"
     cp -f "${ca_key}" "${pki_private_dir}/ca.key"
-    cp -f "${VARS_FILE}" "${pki_dir}/vars"
+    copy_ssl_vars "${pki_dir}"
     
     info "CA files imported to PKI."
   else
     info "No CA files found in ${ca_dir}. Building new CA..."
     
     # Copy vars to pki folder before building
-    cp -f "${VARS_FILE}" "${pki_dir}/vars"
+    copy_ssl_vars "${pki_dir}"
     
     export EASYRSA_BATCH=
     "${EASYRSA_BIN}" build-ca
