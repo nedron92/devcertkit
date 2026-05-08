@@ -41,6 +41,61 @@ init_pki_structure() {
   fi
 }
 
+import_ca() {
+  local ca_dir="${1:?CA config directory is required}"
+  local pki_dir="${2:?PKI directory is required}"
+  local pki_private_dir="${3:?PKI private directory is required}"
+
+  local ca_crt_src="${ca_dir}/ca.crt"
+  local ca_key_src="${ca_dir}/ca.key"
+  local ca_crt_dst="${pki_dir}/ca.crt"
+  local ca_key_dst="${pki_private_dir}/ca.key"
+
+  check_file "${ca_crt_src}"
+  check_file "${ca_key_src}"
+
+  if [[ -f "${ca_crt_dst}" || -f "${ca_key_dst}" ]]; then
+    warn "CA files already exist in PKI. Overwriting..."
+  fi
+
+  info "Importing CA files from ${ca_dir}..."
+  
+  # Run build-ca in batch mode to initialize the CA structure in PKI
+  # We use 'nopass' but then overwrite the key anyway.
+  export EASYRSA_BATCH=1
+  "${EASYRSA_BIN}" build-ca nopass > /dev/null 2>&1
+  
+  # Overwrite the generated CA files with the ones from config
+  cp -f "${ca_crt_src}" "${ca_crt_dst}"
+  cp -f "${ca_key_src}" "${ca_key_dst}"
+
+  info "CA files imported to PKI."
+}
+
+build_new_ca() {
+  local ca_dir="${1:?CA config directory is required}"
+  local pki_dir="${2:?PKI directory is required}"
+  local pki_private_dir="${3:?PKI private directory is required}"
+
+  local ca_crt_dst="${ca_dir}/ca.crt"
+  local ca_key_dst="${ca_dir}/ca.key"
+
+  if [[ -f "${ca_crt_dst}" || -f "${ca_key_dst}" ]]; then
+     fail "CA files already exist in ${ca_dir}. Refusing to overwrite during build-new-ca."
+  fi
+
+  info "Building new CA..."
+  
+  export EASYRSA_BATCH=
+  "${EASYRSA_BIN}" build-ca
+  
+  # Copy generated cert-files from pki folder to config/ca**
+  info "Copying generated CA files to ${ca_dir}..."
+  cp -f "${pki_dir}/ca.crt" "${ca_crt_dst}"
+  cp -f "${pki_private_dir}/ca.key" "${ca_key_dst}"
+  info "CA files copied to config."
+}
+
 prepare_ca() {
   local ca_dir="${1:?CA config directory is required}"
   local pki_dir="${2:?PKI directory is required}"
@@ -56,28 +111,8 @@ prepare_ca() {
   fi
 
   if [[ -f "${ca_crt}" && -f "${ca_key}" ]]; then
-    info "CA files found in ${ca_dir}. Importing..."
-    
-    # Run build-ca in batch mode to initialize the CA structure in PKI
-    # We use 'nopass' but then overwrite the key anyway.
-    export EASYRSA_BATCH=1
-    "${EASYRSA_BIN}" build-ca nopass > /dev/null 2>&1
-    
-    # Overwrite the generated CA files with the ones from config
-    cp -f "${ca_crt}" "${pki_dir}/ca.crt"
-    cp -f "${ca_key}" "${pki_private_dir}/ca.key"
-
-    info "CA files imported to PKI."
+    import_ca "${ca_dir}" "${pki_dir}" "${pki_private_dir}"
   else
-    info "No CA files found in ${ca_dir}. Building new CA..."
-    
-    export EASYRSA_BATCH=
-    "${EASYRSA_BIN}" build-ca
-    
-    # Copy generated cert-files from pki folder to config/ca**
-    info "Copying generated CA files to ${ca_dir}..."
-    cp -f "${pki_dir}/ca.crt" "${ca_crt}"
-    cp -f "${pki_private_dir}/ca.key" "${ca_key}"
-    info "CA files copied to config."
+    build_new_ca "${ca_dir}" "${pki_dir}" "${pki_private_dir}"
   fi
 }

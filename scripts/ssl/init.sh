@@ -29,6 +29,16 @@ init_ssl_pki_structure() {
   copy_ssl_vars "${SSL_PKI_DIR}"
 }
 
+import_ssl_ca() {
+  copy_ssl_vars "${SSL_PKI_DIR}"
+  import_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
+}
+
+create_ssl_ca() {
+  copy_ssl_vars "${SSL_PKI_DIR}"
+  build_new_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
+}
+
 prepare_ssl_ca() {
   copy_ssl_vars "${SSL_PKI_DIR}"
   prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"

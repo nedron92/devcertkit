@@ -257,7 +257,8 @@ ensure_environment() {
 
   if [[ ! -f "${SSL_CA_CRT}" || ! -f "${SSL_CA_KEY}" ]]; then
     warn "CA certificates not found in ${SSL_CONFIG_DIR}."
-    warn "A new CA will be created. It is recommended to initialize it properly first."
+    warn "A new CA will be created automatically. It is recommended to initialize it properly first."
+    info "If you want to import an existing CA, place ca.crt and ca.key in ${SSL_CONFIG_DIR} before running this script."
   fi
 
   prepare_ssl_ca
