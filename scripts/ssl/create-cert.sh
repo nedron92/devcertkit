@@ -46,8 +46,8 @@ source "${SCRIPT_DIR}/../common/shared.sh"
 source "${SCRIPT_DIR}/../common/paths.sh"
 export EASYRSA_PKI="${SSL_PKI_DIR}"
 
-# shellcheck source=../common/easyrsa-prepare.sh
-source "${SCRIPT_DIR}/../common/easyrsa-prepare.sh"
+# shellcheck source=./init.sh
+source "${SCRIPT_DIR}/init.sh"
 
 WILDCARD="false"
 CLEAN_ONLY="false"
@@ -253,14 +253,14 @@ ensure_environment() {
 
   # Initialize SSL PKI and CA if needed
   prepare_dir "${SSL_OUTPUT_DIR}"
-  init_pki_structure "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
+  init_ssl_pki_structure
 
   if [[ ! -f "${SSL_CA_CRT}" || ! -f "${SSL_CA_KEY}" ]]; then
     warn "CA certificates not found in ${SSL_CONFIG_DIR}."
     warn "A new CA will be created. It is recommended to initialize it properly first."
   fi
 
-  prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
+  prepare_ssl_ca
 }
 
 # -----------------------------
@@ -298,6 +298,8 @@ create_ssl_cert() {
   # Batch mode for easyrsa signing prompts (optional)
   if [[ "${BATCH}" == "true" ]]; then
     export EASYRSA_BATCH=1
+  else
+    export EASYRSA_BATCH=
   fi
 
   # Generate request (nopass -> no passphrase on private key)
@@ -317,32 +319,33 @@ create_ssl_cert() {
   check_file "${issued_crt}"
   check_file "${private_key}"
 
-  cp -f "${issued_crt}" "${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.crt"
-  cp -f "${private_key}" "${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.key"
+  local output_dir="${SSL_OUTPUT_DIR}/${safe_name}"
+  cp -f "${issued_crt}" "${output_dir}/${safe_name}.crt"
+  cp -f "${private_key}" "${output_dir}/${safe_name}.key"
   
   if [[ "${INCLUDE_CA}" == "true" ]]; then
-	cp -f "${SSL_PKI_DIR}/ca.crt" "${SSL_OUTPUT_DIR}/${safe_name}/ca.crt"
+	  cp -f "${SSL_PKI_DIR}/ca.crt" "${output_dir}/ca.crt"
   fi
 
   info "\nWrote:"
-  info "  ${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.crt"
-  info "  ${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.key"
+  info "  ${output_dir}/${safe_name}.crt"
+  info "  ${output_dir}/${safe_name}.key"
   
   if [[ "${INCLUDE_CA}" == "true" ]]; then
-	info "  ${SSL_OUTPUT_DIR}/${safe_name}/ca.crt"
+	  info "  ${output_dir}/ca.crt"
   fi
   
   if [[ "${OPENWRT}" == "true" ]]; then
-	rename_to_openwrt_uhttpd_files "${safe_name}" "${SSL_OUTPUT_DIR}/${safe_name}"
+	  rename_to_openwrt_uhttpd_files "${safe_name}" "${output_dir}"
   fi
   
   if [[ "${CREATE_PEM}" == "true" ]]; then
-	create_pem_bundle "${safe_name}" "${SSL_OUTPUT_DIR}/${safe_name}"
+	  create_pem_bundle "${safe_name}" "${output_dir}"
   fi
 
   if [[ "${ARCHIVE}" == "true" ]]; then
     info "\nCreating archive..."
-    ( cd "$(dirname "${SSL_OUTPUT_DIR}")" && 7z a -t7z "${safe_name}.7z" "${safe_name}" >/dev/null )
+    ( cd "$(dirname "${output_dir}")" && 7z a -t7z "${safe_name}.7z" "${safe_name}" >/dev/null )
     info "Done. Archive: ${SSL_OUTPUT_DIR}/${safe_name}.7z"
   else
     info "\nDone. (Archive skipped)"
