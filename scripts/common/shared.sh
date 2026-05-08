@@ -8,6 +8,10 @@ info() {
   echo -e "$*"
 }
 
+warn() {
+  echo -e "\033[0;33mWarning: $*\033[0m" >&2
+}
+
 prepare_dir() {
   mkdir -p "$1"
 }

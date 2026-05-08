@@ -5,28 +5,29 @@ SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ## Load variables and basic functionality
-# shellcheck source=./common/shared.sh
-source "${SCRIPT_DIR}/common/shared.sh"
-# shellcheck source=./common/paths.sh
-source "${SCRIPT_DIR}/common/paths.sh"
-# shellcheck source=./common/easyrsa-prepare.sh
-source "${SCRIPT_DIR}/common/easyrsa-prepare.sh"
+# shellcheck source=./scripts/common/shared.sh
+source "${SCRIPT_DIR}/scripts/common/shared.sh"
+# shellcheck source=./scripts/common/paths.sh
+source "${SCRIPT_DIR}/scripts/common/paths.sh"
+# shellcheck source=./scripts/common/easyrsa-prepare.sh
+source "${SCRIPT_DIR}/scripts/common/easyrsa-prepare.sh"
 
 ##
 show_help() {
   cat <<EOF
-Usage: ./${SCRIPT_NAME} [options]
+Usage: ./devcertkit [options]
 
-Initializes the devcertkit workspace and EasyRSA backend.
+The main entry point for devcertkit.
+Initializes the workspace, resolves EasyRSA, and prepares the environment.
 
 Options:
   -h, --help               Show this help message
   --easyrsa-path <path>    Path to the installed EasyRSA directory
 
 This command:
-- prepares workspace directories
-- initializes EasyRSA PKI for SSL
-- does not create a CA certificate yet
+- prepares workspace directories (runtime, output)
+- resolves and links the EasyRSA backend
+- ensures the environment is ready for certificate creation
 EOF
 }
 
@@ -41,11 +42,6 @@ init_easyrsa() {
     easyrsa_path_found="$(resolve_easyrsa "$easyrsa_path")"
     ln -sfn "$easyrsa_path_found" "${EASYRSA_DIR}"
   fi
-
-  prepare_dir "${SSL_OUTPUT_DIR}"
-
-  init_pki_structure "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
-  prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
 }
 
 run_init() {
@@ -83,7 +79,7 @@ run_init() {
     prepare_dir "${OUTPUT_DIR}"
   fi
 
-  info "\nInitialize easyrsa and pki structure."
+  info "\nInitialize easyrsa."
   init_easyrsa "$user_easyrsa_path"
 
   info "\nDone. Workspace is ready."

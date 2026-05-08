@@ -2,8 +2,10 @@
 
 # devcertkit -- SSL certificate helper toolkit
 #
-# Simple wrapper around EasyRSA for generating internal SSL certificates
-# using your own private Certificate Authority (CA).
+# Part of devcertkit. This script specifically handles the creation 
+# of internal SSL certificates using your own private CA.
+#
+# Simple wrapper around EasyRSA for generating internal SSL certificates.
 #
 # Designed for:
 #   - homelab environments
@@ -37,15 +39,15 @@ set -Eeuo pipefail
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck source=./common/shared.sh
-source "${SCRIPT_DIR}/common/shared.sh"
+# shellcheck source=../common/shared.sh
+source "${SCRIPT_DIR}/../common/shared.sh"
 
-# shellcheck source=./common/paths.sh
-source "${SCRIPT_DIR}/common/paths.sh"
+# shellcheck source=../common/paths.sh
+source "${SCRIPT_DIR}/../common/paths.sh"
 export EASYRSA_PKI="${SSL_PKI_DIR}"
 
-# shellcheck source=./common/easyrsa-prepare.sh
-source "${SCRIPT_DIR}/common/easyrsa-prepare.sh"
+# shellcheck source=../common/easyrsa-prepare.sh
+source "${SCRIPT_DIR}/../common/easyrsa-prepare.sh"
 
 WILDCARD="false"
 CLEAN_ONLY="false"
@@ -237,6 +239,11 @@ EOF
 ensure_environment() {
   [[ ${#DOMAINS[@]} -gt 0 ]] || fail "Please provide at least one domain using -d/--domain."
 
+  # Ensure EasyRSA is resolved
+  if [[ ! -x "${EASYRSA_BIN}" ]]; then
+     info "EasyRSA not found at ${EASYRSA_BIN}. Running devcertkit init..."
+     "${ROOT_DIR}/devcertkit"
+  fi
   check_file "${EASYRSA_BIN}"
 
   # If archiving is enabled, ensure 7z exists
@@ -244,14 +251,16 @@ ensure_environment() {
     need_cmd "7z"
   fi
 
-  # Existing CA prerequisites
-  check_dir "${SSL_CONFIG_DIR}"
-  check_file "${SSL_CONFIG_DIR}/ca.crt"
-  check_file "${SSL_CONFIG_DIR}/ca.key"
-  
-  local vars_file
-  vars_file=$(get_ssl_vars_file)
-  check_file "${vars_file}"
+  # Initialize SSL PKI and CA if needed
+  prepare_dir "${SSL_OUTPUT_DIR}"
+  init_pki_structure "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
+
+  if [[ ! -f "${SSL_CA_CRT}" || ! -f "${SSL_CA_KEY}" ]]; then
+    warn "CA certificates not found in ${SSL_CONFIG_DIR}."
+    warn "A new CA will be created. It is recommended to initialize it properly first."
+  fi
+
+  prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
 }
 
 # -----------------------------

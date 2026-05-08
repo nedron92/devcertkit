@@ -1,4 +1,4 @@
-# devcertkit
+# devcertkit - Version 0.0.1
 
 Simple toolkit for generating internal SSL certificates and related infrastructure artifacts using your own private Certificate Authority (CA).
 
@@ -92,43 +92,54 @@ Future versions will include:
 # Current Workspace Structure
 
 ```text
-backend/
-  .easyrsa/
+devcertkit             # Main entry point
 
 config/
-  ssl/
-  vpn/
-  easyrsa/
+  ca/
+    ssl/               # CA for SSL certificates
+    vpn/               # CA for VPN
+  easyrsa/             # EasyRSA vars and configurations
 
 runtime/
-  ssl/
+  .easyrsa/            # Symlink to EasyRSA backend
+  ssl/pki/             # Internal EasyRSA PKI for SSL
+  vpn/pki/             # Internal EasyRSA PKI for VPN
 
 output/
-  certs/
+  certs/               # Generated SSL certificates
+  clients/             # Generated VPN clients
 
 scripts/
+  common/              # Shared helper scripts
+  ssl/                 # SSL certificate creation toolkit
 ```
 
 ---
 
 # Example Usage
 
+Initialize the workspace:
+
+```bash
+./devcertkit
+```
+
 Generate a simple certificate:
 
 ```bash
-./scripts/create-ssl-cert.sh -d git.home
+./scripts/ssl/create-cert.sh -d git.home
 ```
 
 Generate wildcard certificate:
 
 ```bash
-./scripts/create-ssl-cert.sh --wildcard -d example.home
+./scripts/ssl/create-cert.sh --wildcard -d example.home
 ```
 
 Generate OpenWRT/uhttpd compatible files:
 
 ```bash
-./scripts/create-ssl-cert.sh \
+./scripts/ssl/create-cert.sh \
   --openwrt \
   --include-ca \
   -d config.router
@@ -137,7 +148,7 @@ Generate OpenWRT/uhttpd compatible files:
 Create PEM bundle:
 
 ```bash
-./scripts/create-ssl-cert.sh \
+./scripts/ssl/create-cert.sh \
   --create-pem \
   --include-ca \
   -d mail.home
