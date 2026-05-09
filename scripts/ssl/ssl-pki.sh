@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-# SSL-specific EasyRSA helper functions for devcertkit.
+# This script provides SSL-specific helper functions for managing EasyRSA PKI.
+# It handles PKI initialization, CA management, and configuration variable
+# handling specifically for SSL certificates.
 #
 # This file is intended to be sourced by SSL commands and the root wrapper.
 # It only provides helpers; it does not implement CLI parsing.
@@ -19,8 +21,12 @@ source "${SSL_INIT_SCRIPT_DIR}/../common/easyrsa-prepare.sh"
 export EASYRSA_PKI="${SSL_PKI_DIR}"
 
 get_ssl_vars_file() {
-  local vars_file
+  # Determines the correct EasyRSA vars file to use for SSL operations.
+  # It prioritizes the custom SSL vars file over the default one.
+  # Returns:
+  #   The path to the determined vars file.
 
+  local vars_file
   if [[ -f "${SSL_VARS_FILE}" ]]; then
     vars_file="${SSL_VARS_FILE}"
   elif [[ -f "${SSL_VARS_FILE_DEFAULT}" ]]; then
@@ -33,6 +39,10 @@ get_ssl_vars_file() {
 }
 
 copy_ssl_vars() {
+  # Copies the appropriate SSL vars file to the specified PKI directory.
+  # Arguments:
+  #   $1: PKI directory where the vars file should be copied
+
   local pki_dir="${1:?PKI directory is required}"
   local vars_file
   vars_file="$(get_ssl_vars_file)"
@@ -42,27 +52,36 @@ copy_ssl_vars() {
 }
 
 init_ssl_pki_structure() {
-  # Initialize the EasyRSA PKI structure for SSL.
+  # Initializes the EasyRSA PKI structure for SSL.
+  # It sets up the directory structure and copies the SSL vars file.
+  # Arguments:
+  #   $1: force re-initialization (default: false)
+
   local force="${1:-false}"
   init_pki_structure "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}" "ssl" "${force}"
   copy_ssl_vars "${SSL_PKI_DIR}"
 }
 
 import_ssl_ca() {
-  # Import an existing SSL CA from config/ca/ssl into the SSL PKI.
-  # Useful when a pre-existing CA should be reused.
+  # Imports an existing SSL CA from the configuration directory into the SSL PKI.
+  # This is used when you want to reuse a pre-existing CA.
+
   copy_ssl_vars "${SSL_PKI_DIR}"
   import_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
 }
 
 create_ssl_ca() {
-  # Create a new SSL CA and persist it back to config/ca/ssl.
+  # Creates a new SSL Certificate Authority and saves it to the configuration directory.
+
   copy_ssl_vars "${SSL_PKI_DIR}"
   build_new_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
 }
 
 prepare_ssl_ca() {
-  # Prepare SSL CA usage for certificate creation.
+  # Orchestrates the preparation of the SSL CA.
+  # It ensures that the CA exists in the PKI, either by importing it
+  # or creating a new one if it doesn't exist.
+
   copy_ssl_vars "${SSL_PKI_DIR}"
   prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
   copy_ssl_vars "${SSL_PKI_DIR}"
