@@ -44,7 +44,7 @@ show_help() {
   # Displays the help message for the cert-create.sh script.
 
   cat <<EOF
-Usage: ./${SCRIPT_NAME} [OPTIONS]
+Usage: ./devcertkit ssl cert create [OPTIONS]
 
 Options:
   -d, --domain <name>     Domain name for the certificate. Repeat for altNames.
@@ -62,28 +62,28 @@ Options:
 
 Examples:
   # Simple cert (CN=example.com)
-  ./${SCRIPT_NAME} -d example.com
+  ./devcertkit ssl cert create -d example.com
 
   # With additional SAN
-  ./${SCRIPT_NAME} -d example.com -d www.example.com
+  ./devcertkit ssl cert create -d example.com -d www.example.com
 
   # Wildcard for first domain (CN=*.example.com, SAN includes example.com + *.example.com)
-  ./${SCRIPT_NAME} --wildcard -d example.com
+  ./devcertkit ssl cert create --wildcard -d example.com
 
   # OpenWrt uhttpd filenames (uhttpd.crt/uhttpd.key)
-  ./${SCRIPT_NAME} --openwrt -d example.com
+  ./devcertkit ssl cert create --openwrt -d example.com
 
   # OpenWrt + include CA cert
-  ./${SCRIPT_NAME} --openwrt --include-ca -d example.com
+  ./devcertkit ssl cert create --openwrt --include-ca -d example.com
 
   # Custom output directory, skip archive
-  ./${SCRIPT_NAME} --out-dir ../certs --no-archive -d example.com
+  ./devcertkit ssl cert create --out-dir ../certs --no-archive -d example.com
 
   # Create cert, key and PEM bundle (PEM contains cert + key + CA)
-  ./${SCRIPT_NAME} -d example.com --create-pem --include-ca
+  ./devcertkit ssl cert create -d example.com --create-pem --include-ca
 
   # Create cert + key + PEM bundle (without CA certificate)
-  ./${SCRIPT_NAME} -d example.com --create-pem
+  ./devcertkit ssl cert create -d example.com --create-pem
 EOF
 }
 

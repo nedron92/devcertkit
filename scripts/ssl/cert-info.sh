@@ -30,8 +30,8 @@ DOMAIN=""
 # -----------------------------
 show_help() {
   cat <<EOF
-Usage: ./${SCRIPT_NAME} <domain> [OPTIONS]
-       ./${SCRIPT_NAME} --file <path> [OPTIONS]
+Usage: ./devcertkit ssl cert info <domain> [OPTIONS]
+       ./devcertkit ssl cert info --file <path> [OPTIONS]
 
 Display information about an existing SSL certificate.
 
@@ -45,9 +45,9 @@ Options:
   -h, --help            Show this help message.
 
 Examples:
-  ./${SCRIPT_NAME} git.home
-  ./${SCRIPT_NAME} --file /path/to/cert.crt
-  ./${SCRIPT_NAME} *.git.home --short
+  ./devcertkit ssl cert info git.home
+  ./devcertkit ssl cert info --file /path/to/cert.crt
+  ./devcertkit ssl cert info *.git.home --short
 EOF
 }
 

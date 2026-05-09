@@ -140,7 +140,7 @@ Initialize SSL PKI structure and prepare the CA (imports existing or offers to c
 
 #### CA Management
 
-Create a new CA (re-initializes SSL PKI):
+Create a new CA interactively (re-initializes SSL PKI):
 
 ```bash
 ./devcertkit ssl ca create
@@ -228,12 +228,7 @@ Individual command help is available via `./devcertkit ssl cert create --help` (
 # Planned Features
 
 Planned improvements include:
-- [x] proper bootstrap/init workflow
-- [x] automatic EasyRSA download/setup (resolution and linking)
-- [x] shared helper libraries
-- [x] improved workspace handling
-- [x] unified CLI
-- [x] automatic CA creation
+- [ ] automatic EasyRSA download, if not available
 - [ ] OpenVPN client tooling (originally created in 2023, needs refactoring)
 - [ ] better configuration management
 

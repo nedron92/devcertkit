@@ -22,13 +22,13 @@ show_ssl_help() {
 Usage: ./devcertkit ssl <command> [options]
 
 Commands:
-  init          Initialize SSL PKI structure and prepare CA
-  ca create     Create a new SSL CA
-  ca import     Import an existing SSL CA from config
-  ca info       Display information about the SSL CA
-  cert create   Create a new SSL certificate
-  cert info     Display information about an existing certificate
-  help          Show this help message
+  init              Initialize SSL PKI structure and prepare CA
+  ca create         Create a new SSL CA
+  ca import         Import an existing SSL CA from config
+  ca info           Display information about the SSL CA
+  cert create       Create a new SSL certificate
+  cert info         Display information about an existing certificate
+  help              Show this help message
 
 Run './devcertkit ssl <command> --help' for more information on a command.
 EOF
@@ -167,7 +167,7 @@ run_ssl_commands() {
 run_ssl_ca_commands() {
   # Dispatches SSL CA-related subcommands.
   # Arguments:
-  #   $1: CA subcommand (create, info, etc.)
+  #   $1: CA subcommand (create, import, info, etc.)
   #   $@: remaining arguments for the subcommand
 
   local subcmd="${1:-}"
@@ -182,6 +182,19 @@ run_ssl_ca_commands() {
       ;;
     info)
       _run_ssl_ca_info "$@"
+      ;;
+    -h|--help|help|"?")
+      cat <<EOF
+Usage: ./devcertkit ssl ca <command> [options]
+
+Commands:
+  create        Create a new SSL CA (interactively)
+  import        Import an existing SSL CA from config/ca/ssl/
+  info          Display information about the current SSL CA
+
+Options:
+  -h, --help    Show this help message
+EOF
       ;;
     *)
       if [[ -n "$subcmd" ]]; then
@@ -209,6 +222,17 @@ run_ssl_cert_commands() {
       ;;
     info)
       "${SSL_COMMANDS_SCRIPT_DIR}/cert-info.sh" "$@"
+      ;;
+    -h|--help|help|"?")
+      cat <<EOF
+Usage: ./devcertkit ssl cert <command> [options]
+
+Commands:
+  create        Create a new SSL certificate signed by the CA
+  info          Display information about an existing certificate
+
+Run './devcertkit ssl cert <command> --help' for more information on a command.
+EOF
       ;;
     *)
       if [[ -n "$subcmd" ]]; then

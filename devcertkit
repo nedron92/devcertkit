@@ -45,7 +45,7 @@ It simplifies PKI management using EasyRSA as a backend.
 
 Commands:
   init        Initializes the workspace, resolves EasyRSA, and prepares the environment.
-  ssl         SSL-specific commands (PKI initialization, certificate creation, etc.)
+  ssl         SSL-specific commands (init, ca, cert)
   version     Show the current version
   help        Show this help message
 
@@ -53,6 +53,11 @@ Options:
   -h, --help               Show this help message
   -v, --version            Show the current version
   --easyrsa-path <path>    Path to the installed EasyRSA directory
+
+Examples:
+  ./devcertkit init
+  ./devcertkit ssl init
+  ./devcertkit ssl help
 EOF
 }
 
