@@ -233,10 +233,9 @@ Planned improvements include:
 - [ ] better configuration management
 
 ---
-
 # License
 
-Work in progress.
-Licensing will be clarified before the first stable public release.
+This project is currently in an early development stage.
+Licensing will be clarified before v1.0.0.
 
 EasyRSA itself is licensed separately by the OpenVPN community.
