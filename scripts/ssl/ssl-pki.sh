@@ -66,6 +66,18 @@ import_ssl_ca() {
   # Imports an existing SSL CA from the configuration directory into the SSL PKI.
   # This is used when you want to reuse a pre-existing CA.
 
+  local pki_ca_crt="${SSL_PKI_DIR}/ca.crt"
+  local pki_ca_key="${SSL_PKI_PRIVATE_DIR}/ca.key"
+
+  if [[ -f "${pki_ca_crt}" || -f "${pki_ca_key}" ]]; then
+    warn "CA files already exist in the SSL PKI."
+    echo -n "Are you sure you want to overwrite the existing PKI CA? (y/N): "
+    if ! (read -r response && [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]); then
+      info "Import aborted."
+      return 1
+    fi
+  fi
+
   copy_ssl_vars "${SSL_PKI_DIR}"
   import_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
 }

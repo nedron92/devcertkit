@@ -24,6 +24,7 @@ Usage: ./devcertkit ssl <command> [options]
 Commands:
   init          Initialize SSL PKI structure and prepare CA
   ca create     Create a new SSL CA
+  ca import     Import an existing SSL CA from config
   ca info       Display information about the SSL CA
   cert create   Create a new SSL certificate
   cert info     Display information about an existing certificate
@@ -67,6 +68,12 @@ run_ssl_init() {
       info "\nSkipping CA creation. You will need to provide CA files manually in ${SSL_CONFIG_DIR} and run 'ssl init' again."
     fi
   fi
+}
+
+_run_ssl_ca_import() {
+  # Imports an existing SSL CA into the PKI.
+  check_easyrsa_availability
+  import_ssl_ca
 }
 
 _run_ssl_ca_create() {
@@ -159,6 +166,9 @@ run_ssl_ca_commands() {
   case "$subcmd" in
     create)
       _run_ssl_ca_create "$@"
+      ;;
+    import)
+      _run_ssl_ca_import "$@"
       ;;
     info)
       _run_ssl_ca_info "$@"
