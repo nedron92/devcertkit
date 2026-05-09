@@ -241,10 +241,9 @@ ensure_environment() {
 
   # Ensure EasyRSA is resolved
   if [[ ! -x "${EASYRSA_BIN}" ]]; then
-     info "EasyRSA not found at ${EASYRSA_BIN}. Running devcertkit init..."
-     "${ROOT_DIR}/devcertkit"
+     warn "EasyRSA not found at ${EASYRSA_BIN}."
+     fail "Please init a devcertkit workspace at first (devcertkit init)"
   fi
-  check_file "${EASYRSA_BIN}"
 
   # If archiving is enabled, ensure 7z exists
   if [[ "${ARCHIVE}" == "true" ]]; then
