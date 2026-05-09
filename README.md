@@ -78,14 +78,12 @@ Currently required:
 - Bash
 - OpenSSL
 - 7z
-- EasyRSA backend
+- EasyRSA backend (can be found in system paths or provided manually)
 
-At the moment, a private CA must already exist beforehand.
-
-Future versions will include:
-- automatic workspace initialization
-- automatic CA creation
-- backend bootstrap/setup handling
+The toolkit can now handle:
+- Automatic workspace initialization
+- Automatic CA creation or existing CA import
+- Backend resolution and setup handling
 
 ---
 
@@ -96,8 +94,8 @@ devcertkit             # Main entry point
 
 config/
   ca/
-    ssl/               # CA for SSL certificates
-    vpn/               # CA for VPN
+    ssl/               # CA for SSL certificates (ca.crt, ca.key)
+    vpn/               # CA for VPN (planned)
   easyrsa/             # EasyRSA vars and configurations
 
 runtime/
@@ -118,28 +116,34 @@ scripts/
 
 # Example Usage
 
-Initialize the workspace:
+Initialize the workspace and setup EasyRSA:
 
 ```bash
-./devcertkit
+./devcertkit init
+```
+
+Initialize SSL PKI and prepare the CA (imports existing or offers to create a new one):
+
+```bash
+./devcertkit ssl init
 ```
 
 Generate a simple certificate:
 
 ```bash
-./scripts/ssl/create-cert.sh -d git.home
+./devcertkit ssl cert create -d git.home
 ```
 
 Generate wildcard certificate:
 
 ```bash
-./scripts/ssl/create-cert.sh --wildcard -d example.home
+./devcertkit ssl cert create --wildcard -d example.home
 ```
 
 Generate OpenWRT/uhttpd compatible files:
 
 ```bash
-./scripts/ssl/create-cert.sh \
+./devcertkit ssl cert create \
   --openwrt \
   --include-ca \
   -d config.router
@@ -148,7 +152,7 @@ Generate OpenWRT/uhttpd compatible files:
 Create PEM bundle:
 
 ```bash
-./scripts/ssl/create-cert.sh \
+./devcertkit ssl cert create \
   --create-pem \
   --include-ca \
   -d mail.home
@@ -156,18 +160,29 @@ Create PEM bundle:
 
 ---
 
+# Main Commands
+
+- `init`: Setup the workspace and link EasyRSA.
+- `ssl init`: Setup the SSL PKI and CA.
+- `ssl cert create`: Generate and sign new SSL certificates.
+
+Run `./devcertkit help` or `./devcertkit ssl help` for more details.
+
+---
+
 # Planned Features
 
 Planned improvements include:
 
+- proper bootstrap/init workflow (Done)
+- automatic EasyRSA download/setup (Partially Done - resolution and linking)
+- shared helper libraries (Done)
+- improved workspace handling (Done)
+- unified CLI (Done)
+- automatic CA creation (Done)
+- better configuration management
 - OpenVPN client tooling
   - also originally created back in 2023 (need to be generalized and refactored)
-- proper bootstrap/init workflow
-- automatic EasyRSA download/setup
-- shared helper libraries
-- improved workspace handling
-- unified CLI
-- better configuration management
 
 ---
 

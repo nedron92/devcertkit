@@ -9,6 +9,9 @@
 #   - VPN infrastructure
 #   - Development environments
 #
+# It serves as the main entry point for the toolkit, orchestrating
+# initialization and dispatching commands to specific modules.
+#
 # Project: https://github.com/nedron92/devcertkit
 #
 
@@ -31,6 +34,9 @@ source "${SCRIPT_DIR}/scripts/ssl/ssl-commands.sh"
 # Helper
 # -----------------------------
 show_help() {
+  # Displays the main help message for the devcertkit tool,
+  # listing available commands and global options.
+
   cat <<EOF
 Usage: ./devcertkit <command> [options]
 
@@ -52,6 +58,11 @@ EOF
 # General operation
 # -----------------------------
 init_easyrsa() {
+  # Resolves the EasyRSA installation and creates a symlink in the workspace.
+  # If the binary is already linked and executable, it skips resolution.
+  # Arguments:
+  #   $1: optional path to EasyRSA provided by the user
+
   local easyrsa_path="${1:-${EASYRSA_PATH:-}}"
   local easyrsa_path_found
 
@@ -65,6 +76,11 @@ init_easyrsa() {
 }
 
 run_init() {
+  # Initializes the devcertkit workspace.
+  # This includes creating runtime and output directories, and setting up EasyRSA.
+  # Arguments:
+  #   $@: arguments passed to the init command (e.g., --easyrsa-path)
+
   local user_easyrsa_path=""
 
   while [[ $# -gt 0 ]]; do
