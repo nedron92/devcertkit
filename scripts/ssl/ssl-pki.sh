@@ -130,3 +130,16 @@ sanitize_name() {
 
   echo "$name"
 }
+
+clear_ssl_pki() {
+  # Deletes the entire SSL PKI directory.
+  # This effectively resets the SSL PKI state.
+
+  if [[ -d "${SSL_PKI_DIR}" ]]; then
+    info "Deleting SSL PKI directory: ${SSL_PKI_DIR}"
+    rm -rf "${SSL_PKI_DIR}"
+    info "SSL PKI directory deleted."
+  else
+    info "SSL PKI directory does not exist: ${SSL_PKI_DIR}"
+  fi
+}

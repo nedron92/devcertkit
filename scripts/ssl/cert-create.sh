@@ -28,7 +28,6 @@ source "${SCRIPT_DIR}/../common/paths.sh"
 source "${SCRIPT_DIR}/ssl-pki.sh"
 
 WILDCARD="false"
-CLEAN_ONLY="false"
 ARCHIVE="true"   	# if false -> skip 7z
 BATCH="false"    	# if true -> set EASYRSA_BATCH=1 (non-interactive)
 OPENWRT="false"		# if true -> rename key/crt files directly to uhttpd.key / uhttpd.crt
@@ -53,7 +52,6 @@ Options:
                           uhttpd.crt and uhttpd.key (instead of <domain>.crt/.key).
       --include-ca        Also copy ca.crt into the output directory (default: false).
       --create-pem        Create an additional PEM bundle (cert + key, CA not included by default).
-      --clean             Delete the PKI directory and exit.
       --batch             Run EasyRSA in batch mode (non-interactive) if supported.
       --no-archive        Do not create a 7z archive.
       --out-dir <path>    Output directory (default: ${SSL_OUTPUT_DIR})
@@ -326,10 +324,6 @@ while [[ $# -gt 0 ]]; do
       WILDCARD="true"
       shift
       ;;
-    --clean)
-      CLEAN_ONLY="true"
-      shift
-      ;;
     --batch)
       BATCH="true"
       shift
@@ -369,12 +363,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-if [[ "${CLEAN_ONLY}" == "true" ]]; then
-  rm -rf "${SSL_PKI_DIR}"
-  echo "Deleted PKI dir: ${SSL_PKI_DIR}"
-  exit 0
-fi
 
 ensure_environment
 create_ssl_cert

@@ -28,6 +28,7 @@ Commands:
   ca info           Display information about the SSL CA
   cert create       Create a new SSL certificate
   cert info         Display information about an existing certificate
+  clean             Delete the SSL PKI directory
   help              Show this help message
 
 Run './devcertkit ssl <command> --help' for more information on a command.
@@ -129,6 +130,11 @@ _run_ssl_ca_info() {
   "${SSL_COMMANDS_SCRIPT_DIR}/cert-info.sh" --file "${SSL_CA_CRT}" "$@"
 }
 
+run_ssl_clean() {
+  # Deletes the SSL PKI directory.
+  clear_ssl_pki
+}
+
 # -----------------------------
 # Main
 # -----------------------------
@@ -151,6 +157,9 @@ run_ssl_commands() {
       ;;
     cert)
       run_ssl_cert_commands "$@"
+      ;;
+    clean)
+      run_ssl_clean "$@"
       ;;
     -h|--help|help|"?")
       show_ssl_help
