@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+#
+# devcertkit -- A toolkit for managing development and internal certificates.
+#
+# This tool provides a simplified wrapper around EasyRSA to manage
+# internal SSL/VPN certificates, specifically tailored for:
+#   - Homelab environments
+#   - Internal HTTPS services
+#   - VPN infrastructure
+#   - Development environments
+#
+# Project: https://github.com/nedron92/devcertkit
+#
+
 set -Eeuo pipefail
 
 SCRIPT_NAME="$(basename "$0")"
@@ -11,23 +24,27 @@ source "${SCRIPT_DIR}/scripts/common/shared.sh"
 source "${SCRIPT_DIR}/scripts/common/paths.sh"
 # shellcheck source=./scripts/common/easyrsa-prepare.sh
 source "${SCRIPT_DIR}/scripts/common/easyrsa-prepare.sh"
+# shellcheck source=./scripts/ssl/ssl-commands.sh
+source "${SCRIPT_DIR}/scripts/ssl/ssl-commands.sh"
 
-##
+# -----------------------------
+# General operation
+# -----------------------------
 show_help() {
   cat <<EOF
-Usage: ./devcertkit [options]
+Usage: ./devcertkit <command> [options]
 
-The main entry point for devcertkit.
-Initializes the workspace, resolves EasyRSA, and prepares the environment.
+devcertkit is a helper toolkit for managing internal SSL/VPN certificates.
+It simplifies PKI management using EasyRSA as a backend.
+
+Commands:
+  init        Initializes the workspace, resolves EasyRSA, and prepares the environment.
+  ssl         SSL-specific commands (PKI initialization, certificate creation, etc.)
+  help        Show this help message
 
 Options:
   -h, --help               Show this help message
   --easyrsa-path <path>    Path to the installed EasyRSA directory
-
-This command:
-- prepares workspace directories (runtime, output)
-- resolves and links the EasyRSA backend
-- ensures the environment is ready for certificate creation
 EOF
 }
 
@@ -89,4 +106,30 @@ run_init() {
   info "  SSL-PKI: ${SSL_PKI_DIR}"
 }
 
-run_init "$@"
+# -----------------------------
+# Main
+# -----------------------------
+MAIN_CMD="${1:-}"
+[[ -n "${MAIN_CMD}" ]] && shift || true
+
+case "${MAIN_CMD}" in
+  init)
+    run_init "$@"
+    ;;
+  ssl)
+    run_ssl_commands "$@"
+    ;;
+  -h|--help|help|"?")
+    show_help
+    exit 0
+    ;;
+  "")
+    show_help
+    exit 0
+    ;;
+  *)
+    warn "Unknown command: ${MAIN_CMD}"
+    show_help
+    exit 1
+    ;;
+esac
