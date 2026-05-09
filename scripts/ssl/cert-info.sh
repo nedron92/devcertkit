@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+#
+# Part of the devcertkit toolkit.
+# This script displays information about an existing SSL certificate.
+# It can read certificates by domain name (searching in output/certs)
+# or by absolute file path.
+#
+
+set -Eeuo pipefail
+
+# -----------------------------
+# Config
+# -----------------------------
+SCRIPT_NAME="$(basename "$0")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=../common/shared.sh
+source "${SCRIPT_DIR}/../common/shared.sh"
+# shellcheck source=../common/paths.sh
+source "${SCRIPT_DIR}/../common/paths.sh"
+# shellcheck source=./ssl-pki.sh
+source "${SCRIPT_DIR}/ssl-pki.sh"
+
+SHORT_MODE="false"
+FILE_PATH=""
+DOMAIN=""
+
+# -----------------------------
+# Helpers
+# -----------------------------
+show_help() {
+  cat <<EOF
+Usage: ./${SCRIPT_NAME} <domain> [OPTIONS]
+       ./${SCRIPT_NAME} --file <path> [OPTIONS]
+
+Display information about an existing SSL certificate.
+
+Arguments:
+  <domain>              Domain name (e.g., git.home or *.git.home)
+                        The script will search in ${SSL_OUTPUT_DIR}.
+
+Options:
+  --file <path>         Absolute path to the certificate file.
+  --short               Only display expiration date and remaining validity.
+  -h, --help            Show this help message.
+
+Examples:
+  ./${SCRIPT_NAME} git.home
+  ./${SCRIPT_NAME} --file /path/to/cert.crt
+  ./${SCRIPT_NAME} *.git.home --short
+EOF
+}
+
+get_cert_path_by_domain() {
+  local domain="$1"
+  local safe_name
+  safe_name="$(sanitize_name "$domain")"
+  
+  local cert_path="${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.crt"
+  
+  # Fallback: maybe it was renamed to uhttpd.crt
+  if [[ ! -f "$cert_path" ]]; then
+    cert_path="${SSL_OUTPUT_DIR}/${safe_name}/uhttpd.crt"
+  fi
+  
+  if [[ -f "$cert_path" ]]; then
+    echo "$cert_path"
+  else
+    fail "No certificate found for domain '${domain}' in ${SSL_OUTPUT_DIR}/${safe_name}/"
+  fi
+}
+
+# -----------------------------
+# CLI Parsing
+# -----------------------------
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    --file)
+      if [[ -n "${2:-}" && "$2" != -* ]]; then
+        FILE_PATH="$2"
+        shift 2
+      else
+        fail "--file requires a path argument."
+      fi
+      ;;
+    --short)
+      SHORT_MODE="true"
+      shift
+      ;;
+    -*)
+      fail "Unknown option: $1"
+      ;;
+    *)
+      if [[ -z "$DOMAIN" ]]; then
+        DOMAIN="$1"
+        shift
+      else
+        fail "Unexpected argument: $1 (domain already specified as $DOMAIN)"
+      fi
+      ;;
+  esac
+done
+
+# Validation
+if [[ -n "$DOMAIN" && -n "$FILE_PATH" ]]; then
+  fail "Cannot specify both <domain> and --file."
+fi
+
+if [[ -z "$DOMAIN" && -z "$FILE_PATH" ]]; then
+  show_help
+  exit 1
+fi
+
+# Determine target file
+TARGET_CERT=""
+if [[ -n "$FILE_PATH" ]]; then
+  TARGET_CERT="$FILE_PATH"
+else
+  TARGET_CERT="$(get_cert_path_by_domain "$DOMAIN")"
+fi
+
+check_file "$TARGET_CERT"
+need_cmd "openssl"
+
+# -----------------------------
+# Data Extraction
+# -----------------------------
+# CN
+CN=$(openssl x509 -in "$TARGET_CERT" -noout -subject -nameopt RFC2253 | sed 's/.*CN=\([^,]*\).*/\1/')
+
+# Issuer
+ISSUER=$(openssl x509 -in "$TARGET_CERT" -noout -issuer -nameopt RFC2253 | sed 's/.*CN=\([^,]*\).*/\1/')
+
+# SANs
+SANS=$(openssl x509 -in "$TARGET_CERT" -noout -ext subjectAltName 2>/dev/null | grep -v "subjectAltName" | sed 's/^[[:space:]]*//' | tr -d '\n' || true)
+if [[ -z "$SANS" ]]; then
+    # Try alternative way to get SANs if grep didn't work as expected
+    SANS=$(openssl x509 -in "$TARGET_CERT" -noout -text 2>/dev/null | grep -A1 "Subject Alternative Name" | tail -n1 | sed 's/^[[:space:]]*//' | tr -d '\n' || true)
+fi
+
+# Dates
+NOT_BEFORE=$(openssl x509 -in "$TARGET_CERT" -noout -startdate | cut -d= -f2)
+NOT_AFTER=$(openssl x509 -in "$TARGET_CERT" -noout -enddate | cut -d= -f2)
+
+# Time to expiration (seconds)
+NOW_SEC=$(date +%s)
+EXP_SEC=$(date -d "$NOT_AFTER" +%s)
+REMAINING_SEC=$((EXP_SEC - NOW_SEC))
+REMAINING_DAYS=$((REMAINING_SEC / 86400))
+
+# Fingerprint (SHA256)
+FINGERPRINT=$(openssl x509 -in "$TARGET_CERT" -noout -fingerprint -sha256 | cut -d= -f2)
+
+# Key Info
+KEY_ALG=$(openssl x509 -in "$TARGET_CERT" -noout -text | grep "Public Key Algorithm" | cut -d: -f2 | sed 's/^[[:space:]]*//' || echo "unknown")
+KEY_BITS=$(openssl x509 -in "$TARGET_CERT" -noout -text | grep -E "Public-Key:|RSA Public-Key:" | sed 's/[^0-9]//g' || echo "unknown")
+
+# -----------------------------
+# Output
+# -----------------------------
+if [[ "$SHORT_MODE" == "true" ]]; then
+    if [[ $REMAINING_SEC -lt 0 ]]; then
+        info "Expired on: $NOT_AFTER (EXPIRED $(( -REMAINING_DAYS )) days ago)"
+    else
+        info "Expires on: $NOT_AFTER ($REMAINING_DAYS days remaining)"
+    fi
+else
+    info "Certificate Information for: ${DOMAIN:-$TARGET_CERT}"
+    info "--------------------------------------------------------"
+    info "Subject CN:      $CN"
+    info "Issuer:          $ISSUER"
+    info "SANs:            ${SANS:-None}"
+    info "Not Before:      $NOT_BEFORE"
+    info "Not After:       $NOT_AFTER"
+    if [[ $REMAINING_SEC -lt 0 ]]; then
+        info "Status:          \033[0;31mEXPIRED\033[0m ($(( -REMAINING_DAYS )) days ago)"
+    else
+        info "Expires in:      $REMAINING_DAYS days"
+    fi
+    info "Key Algorithm:   $KEY_ALG (${KEY_BITS:-unknown} bits)"
+    info "Fingerprint:     $FINGERPRINT"
+    info "--------------------------------------------------------"
+fi

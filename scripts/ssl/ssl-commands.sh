@@ -25,6 +25,7 @@ Commands:
   init          Initialize SSL PKI structure and prepare CA
   ca create     Create a new SSL CA
   cert create   Create a new SSL certificate
+  cert info     Display information about an existing certificate
   help          Show this help message
 
 Run './devcertkit ssl <command> --help' for more information on a command.
@@ -157,7 +158,7 @@ run_ssl_ca_commands() {
 
 run_ssl_cert_commands() {
   # Dispatches SSL certificate-related subcommands.
-  # Currently handles 'create' by calling the create-cert.sh script.
+  # Currently handles 'create' by calling the cert-create.sh script.
   # Arguments:
   #   $1: cert subcommand (create, etc.)
   #   $@: remaining arguments for the subcommand
@@ -168,7 +169,10 @@ run_ssl_cert_commands() {
   case "$subcmd" in
     create)
       check_easyrsa_availability
-      "${SSL_COMMANDS_SCRIPT_DIR}/create-cert.sh" "$@"
+      "${SSL_COMMANDS_SCRIPT_DIR}/cert-create.sh" "$@"
+      ;;
+    info)
+      "${SSL_COMMANDS_SCRIPT_DIR}/cert-info.sh" "$@"
       ;;
     *)
       if [[ -n "$subcmd" ]]; then

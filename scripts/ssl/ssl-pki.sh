@@ -86,3 +86,35 @@ prepare_ssl_ca() {
   prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
   copy_ssl_vars "${SSL_PKI_DIR}"
 }
+
+sanitize_name() {
+  # Converts a domain name into a filesystem-safe identifier by replacing
+  # dots and other special characters with underscores.
+  # Arguments:
+  #   $1: input domain or wildcard string
+  # Returns:
+  #   A sanitized string suitable for file and directory names.
+  #
+  # Examples:
+  #   "*.example.com"  -> "wildcard_example_com"
+  #   "example.com"    -> "example_com"
+  #   "foo-bar.test"   -> "foo-bar_test"
+  #
+  local input="$1"
+  local name
+
+  # Handle wildcard prefix explicitly
+  if [[ "$input" == \*.* ]]; then
+    name="wildcard_${input#*.}"
+  else
+    name="$input"
+  fi
+
+  # Replace dots with underscores
+  name="${name//./_}"
+
+  # Replace any remaining invalid characters with underscore
+  name="$(echo "$name" | sed 's/[^a-zA-Z0-9_-]/_/g')"
+
+  echo "$name"
+}
