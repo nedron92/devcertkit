@@ -1,35 +1,15 @@
 #!/usr/bin/env bash
-
-# devcertkit -- SSL certificate helper toolkit
 #
-# Part of devcertkit. This script specifically handles the creation 
-# of internal SSL certificates using your own private CA.
-#
-# Simple wrapper around EasyRSA for generating internal SSL certificates.
-#
-# Designed for:
-#   - homelab environments
-#   - internal HTTPS services
-#   - OpenWRT/uhttpd certificates
-#   - private development domains
-#   - VPN-connected internal infrastructure
+# Part of the devcertkit toolkit.
+# This script handles the creation of SSL certificates using a private CA.
+# It uses EasyRSA as a backend and provides options for wildcards, SANs,
+# OpenWrt/uhttpd compatibility, and PEM bundles.
 #
 # Examples:
 #   git.home (your local / home git-server)
 #   admin.home (your local / home admin-ui / dashboard)
 #   config.router (your Router-UI, e.g. openwrt LuCI)
 #
-# Requirements:
-#   A private CA must be initialized beforehand.
-#
-# Backend:
-#   EasyRSA 3.x
-#
-# Project:
-#   https://github.com/nedron92/devcertkit
-
-# TODO:
-# - replace temporary .rnd workaround
 
 set -Eeuo pipefail
 
@@ -60,6 +40,8 @@ DOMAINS=()
 # Helpers
 # -----------------------------
 show_help() {
+  # Displays the help message for the create-cert.sh script.
+
   cat <<EOF
 Usage: ./${SCRIPT_NAME} [OPTIONS]
 
@@ -105,6 +87,9 @@ EOF
 }
 
 cleanup_on_error() {
+  # Trap handler for script failures.
+  # Prints the exit code to stderr if it's non-zero.
+
   local exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
     echo "Script failed (exit code: $exit_code)." >&2
@@ -113,13 +98,18 @@ cleanup_on_error() {
 trap cleanup_on_error EXIT
 
 sanitize_name() {
-  # Convert a domain or wildcard domain into a filesystem-safe identifier.
+  # Converts a domain name into a filesystem-safe identifier by replacing
+  # dots and other special characters with underscores.
+  # Arguments:
+  #   $1: input domain or wildcard string
+  # Returns:
+  #   A sanitized string suitable for file and directory names.
   #
   # Examples:
   #   "*.example.com"  -> "wildcard_example_com"
   #   "example.com"    -> "example_com"
   #   "foo-bar.test"   -> "foo-bar_test"
-
+  #
   local input="$1"
   local name
 
@@ -141,7 +131,13 @@ sanitize_name() {
 
 
 join_san_dns() {
-  # Build a SAN string for EasyRSA: "DNS:example.com,DNS:www.example.com"
+  # Formats a list of domains into a Subject Alternative Name (SAN) string
+  # suitable for EasyRSA/OpenSSL (e.g., "DNS:example.com,DNS:www.example.com").
+  # Arguments:
+  #   $@: list of domain names
+  # Returns:
+  #   The formatted SAN string.
+
   local -a arr=("$@")
   local out=""
   local d
@@ -157,16 +153,11 @@ join_san_dns() {
 }
 
 rename_to_openwrt_uhttpd_files() {
-  # Rename certificate + key files to OpenWrt/uhttpd defaults.
-  # After this, only uhttpd.crt and uhttpd.key will exist (plus ca.crt).
-  #
-  # Expected:
-  #   <domain>.crt
-  #   <domain>.key
-  #
-  # Result:
-  #   uhttpd.crt
-  #   uhttpd.key
+  # Renames generated certificate and key files to OpenWrt/uhttpd default names
+  # (uhttpd.crt and uhttpd.key) within the specified directory.
+  # Arguments:
+  #   $1: base domain name used for the original files
+  #   $2: directory containing the files
 
   local domain="$1"
   local cert_dir="$2"
@@ -189,16 +180,11 @@ rename_to_openwrt_uhttpd_files() {
 }
 
 create_pem_bundle() {
-  # Create a combined PEM bundle alongside the existing .crt and .key files.
-  #
-  # Input (expected):
-  #   <cert_dir>/<domain>.crt  OR <cert_dir>/uhttpd.crt
-  #   <cert_dir>/<domain>.key  OR <cert_dir>/uhttpd.key
-  # Optional:
-  #   <cert_dir>/ca.crt        (only included if INCLUDE_CA=true and file exists)
-  #
-  # Output:
-  #   <cert_dir>/<domain>.pem  OR <cert_dir>/uhttpd.pem (depending on OPENWRT flag)
+  # Creates a combined PEM bundle containing the certificate and private key.
+  # If configured, it also appends the CA certificate to the bundle.
+  # Arguments:
+  #   $1: base domain name (or "uhttpd" if OpenWrt mode is on)
+  #   $2: directory containing the source files
 
   local domain="$1"
   local cert_dir="$2"
@@ -233,6 +219,9 @@ create_pem_bundle() {
 # Environment checks & setup
 # -----------------------------
 ensure_environment() {
+  # Verifies that all necessary tools and directories are available before
+  # proceeding with certificate creation. Fails if requirements are not met.
+
   [[ ${#DOMAINS[@]} -gt 0 ]] || fail "Please provide at least one domain using -d/--domain."
 
   # Ensure EasyRSA is resolved
@@ -257,6 +246,10 @@ ensure_environment() {
 # Main operation
 # -----------------------------
 create_ssl_cert() {
+  # The main orchestration function for generating and signing an SSL certificate.
+  # It handles CN/SAN determination, calls EasyRSA to generate and sign the
+  # request, and manages the output files (copying, renaming, bundling, archiving).
+
   local base_domain="${DOMAINS[0]}"
 
   # Determine CN and SANs
