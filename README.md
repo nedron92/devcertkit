@@ -130,13 +130,35 @@ Initialize the workspace and setup EasyRSA:
 ./devcertkit init
 ```
 
-### SSL Management
+### SSL Management (Current)
 
-Initialize SSL PKI and prepare the CA (imports existing or offers to create a new one):
+Initialize SSL PKI structure and prepare the CA (imports existing or offers to create a new one):
 
 ```bash
 ./devcertkit ssl init
 ```
+
+#### CA Management
+
+Create a new CA (re-initializes SSL PKI):
+
+```bash
+./devcertkit ssl ca create
+```
+
+Import an existing CA from `config/ca/ssl`:
+
+```bash
+./devcertkit ssl ca import
+```
+
+Show information about the current SSL CA:
+
+```bash
+./devcertkit ssl ca info
+```
+
+#### Certificate Management
 
 Generate a simple certificate:
 
@@ -144,9 +166,11 @@ Generate a simple certificate:
 ./devcertkit ssl cert create -d git.home
 ```
 
-Generate wildcard certificate:
+Generate wildcard certificate (autodetects wildcard if `-d` starts with `*.`):
 
 ```bash
+./devcertkit ssl cert create -d *.example.home
+# or explicitly:
 ./devcertkit ssl cert create --wildcard -d example.home
 ```
 
@@ -159,13 +183,23 @@ Generate OpenWRT/uhttpd compatible files:
   -d config.router
 ```
 
-Create PEM bundle:
+Create PEM bundle (cert + key + optional CA):
 
 ```bash
 ./devcertkit ssl cert create \
   --create-pem \
   --include-ca \
   -d mail.home
+```
+
+Show information about a generated certificate:
+
+```bash
+./devcertkit ssl cert info git.home
+# or by file path:
+./devcertkit ssl cert info --file /path/to/cert.crt
+# short output (expiration only):
+./devcertkit ssl cert info git.home --short
 ```
 
 ### VPN Management (Upcoming)
@@ -178,12 +212,16 @@ Create PEM bundle:
 
 - `init`: Setup the workspace and link EasyRSA.
 - `version`: Show the current version.
-- `ssl init`: Setup the SSL PKI and CA.
+- `help`: Show main help message.
+- `ssl init`: Setup the SSL PKI structure.
+- `ssl ca create`: Create a new SSL CA.
+- `ssl ca import`: Import SSL CA from config.
+- `ssl ca info`: Show information about the SSL CA.
 - `ssl cert create`: Generate and sign new SSL certificates.
-- `ssl ca info`: Show information about the current SSL CA.
 - `ssl cert info`: Show information about a generated certificate.
 
 Run `./devcertkit help`, `./devcertkit version` or `./devcertkit ssl help` for more details.
+Individual command help is available via `./devcertkit ssl cert create --help` (after initialization).
 
 ---
 

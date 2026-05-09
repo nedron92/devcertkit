@@ -38,8 +38,8 @@ check_easyrsa_availability() {
   # Verifies that the EasyRSA binary is available and executable.
   # Fails with an error message if EasyRSA is missing.
 
-  if [[ ! -x "${EASYRSA_DIR}/easyrsa" ]]; then
-    warn "EasyRSA binary not found or not executable at ${EASYRSA_DIR}/easyrsa."
+  if [[ ! -x "${EASYRSA_BIN}" ]]; then
+    warn "EasyRSA binary not found or not executable at ${EASYRSA_BIN}."
     fail "You need to initialize the devcertkit workspace first with 'devcertkit init'."
   fi
 }
@@ -52,7 +52,17 @@ run_ssl_init() {
   # It sets up the PKI directories and either imports an existing CA
   # or prompts the user to create a new one.
 
-  check_easyrsa_availability
+  if [[ ! -x "${EASYRSA_BIN}" ]]; then
+    warn "EasyRSA binary not found or not executable at ${EASYRSA_BIN}."
+    echo -n "Do you want to initialize the devcertkit workspace now? (y/N): "
+    if read -r response && [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+      run_init
+    else
+      info "devcertkit init need to be run beforehand"
+      return 0
+    fi
+  fi
+
   info "Initializing SSL PKI structure..."
   init_ssl_pki_structure
 
@@ -65,7 +75,7 @@ run_ssl_init() {
     if read -r response && [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
       create_ssl_ca
     else
-      info "\nSkipping CA creation. You will need to provide CA files manually in ${SSL_CONFIG_DIR} and run 'ssl init' again."
+      info "\nSkipping CA creation. You will need to provide CA files manually in ${SSL_CONFIG_DIR} and run 'devcertkit ssl init' again."
     fi
   fi
 }
