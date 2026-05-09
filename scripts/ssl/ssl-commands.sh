@@ -55,6 +55,33 @@ run_ssl_init() {
   fi
 }
 
+_run_ssl_ca_create() {
+  check_easyrsa_availability
+
+  warn "You are about to create a new CA. This will overwrite any existing CA files in the PKI and re-init it."
+  echo -n "Are you sure you want to proceed? (y/N): "
+  if read -r response && [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    # Check if CA files already exist and offer backup
+    if [[ -f "${SSL_CA_CRT}" || -f "${SSL_CA_KEY}" ]]; then
+      warn "CA files already exist in ${SSL_CONFIG_DIR}."
+      local timestamp
+      timestamp=$(date +%Y%m%d_%H%M%S)
+      local backup_dir="${SSL_CONFIG_DIR}/backup_${timestamp}"
+
+      info "Creating backup in ${backup_dir}..."
+      mkdir -p "${backup_dir}"
+      [[ -f "${SSL_CA_CRT}" ]] && cp -p "${SSL_CA_CRT}" "${backup_dir}/"
+      [[ -f "${SSL_CA_KEY}" ]] && cp -p "${SSL_CA_KEY}" "${backup_dir}/"
+      info "Backup created."
+    fi
+
+    init_ssl_pki_structure "true"
+    create_ssl_ca
+  else
+    info "CA creation aborted."
+  fi
+}
+
 # -----------------------------
 # Main
 # -----------------------------
@@ -90,14 +117,7 @@ run_ssl_ca_commands() {
 
   case "$subcmd" in
     create)
-      check_easyrsa_availability
-      warn "You are about to create a new CA. This will overwrite any existing CA files in the PKI."
-      echo -n "Are you sure you want to proceed? (y/N): "
-      if read -r response && [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        create_ssl_ca
-      else
-        info "CA creation aborted."
-      fi
+      _run_ssl_ca_create "$@"
       ;;
     *)
       if [[ -n "$subcmd" ]]; then

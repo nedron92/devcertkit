@@ -43,7 +43,8 @@ copy_ssl_vars() {
 
 init_ssl_pki_structure() {
   # Initialize the EasyRSA PKI structure for SSL.
-  init_pki_structure "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}" "ssl"
+  local force="${1:-false}"
+  init_pki_structure "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}" "ssl" "${force}"
   copy_ssl_vars "${SSL_PKI_DIR}"
 }
 

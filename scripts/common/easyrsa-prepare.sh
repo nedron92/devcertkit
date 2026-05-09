@@ -27,11 +27,19 @@ init_pki_structure() {
   local pki_dir="${1:?PKI directory is required}"
   local pki_private_dir="${2:?PKI private directory is required}"
   local pki_type="${3:?PKI type is required}"
+  local force="${4:-false}"
+
+  if [[ "${force}" == "true" ]]; then
+    info " Forcing re-initialization of EasyRSA PKI (${pki_type}) in ${pki_dir}..."
+    rm -rf "${pki_dir}"
+  fi
 
   if [[ -d "${pki_dir}" && -d "${pki_private_dir}" ]]; then
     info " EasyRSA PKI (${pki_type}) already exists: ${pki_dir}"
   else
-    info "Initializing EasyRSA PKI (${pki_type}) in ${pki_dir}..."
+    if [[ "${force}" != "true" ]]; then
+      info "Initializing EasyRSA PKI (${pki_type}) in ${pki_dir}..."
+    fi
     # Ensure directory is empty/clean for init-pki to avoid confirmation prompt
     rm -rf "${pki_dir}"
     # EasyRSA / OpenSSL compatibility seed file
@@ -79,10 +87,6 @@ build_new_ca() {
 
   local ca_crt_dst="${ca_dir}/ca.crt"
   local ca_key_dst="${ca_dir}/ca.key"
-
-  if [[ -f "${ca_crt_dst}" || -f "${ca_key_dst}" ]]; then
-     fail "CA files already exist in ${ca_dir}. Refusing to overwrite during build-new-ca."
-  fi
 
   info "Building new CA..."
   
