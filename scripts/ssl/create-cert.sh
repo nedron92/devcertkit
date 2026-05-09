@@ -46,9 +46,6 @@ source "${SCRIPT_DIR}/../common/shared.sh"
 source "${SCRIPT_DIR}/../common/paths.sh"
 export EASYRSA_PKI="${SSL_PKI_DIR}"
 
-# shellcheck source=./ssl-pki.sh
-source "${SCRIPT_DIR}/ssl-pki.sh"
-
 WILDCARD="false"
 CLEAN_ONLY="false"
 ARCHIVE="true"   	# if false -> skip 7z
@@ -240,8 +237,12 @@ ensure_environment() {
 
   # Ensure EasyRSA is resolved
   if [[ ! -x "${EASYRSA_BIN}" ]]; then
-     warn "EasyRSA not found at ${EASYRSA_BIN}."
-     fail "Please init a devcertkit workspace at first (devcertkit init)"
+     fail "EasyRSA not found at ${EASYRSA_BIN}. Please run 'devcertkit init' at first."
+  fi
+
+  # Ensure SSL PKI is initialized
+  if [[ ! -d "${SSL_PKI_DIR}" || ! -d "${SSL_PKI_PRIVATE_DIR}" || ! -d "${SSL_PKI_DIR}/issued" ]]; then
+     fail "SSL PKI not initialized. Please run 'devcertkit ssl init' at first."
   fi
 
   # If archiving is enabled, ensure 7z exists
@@ -249,17 +250,7 @@ ensure_environment() {
     need_cmd "7z"
   fi
 
-  # Initialize SSL PKI and CA if needed
   prepare_dir "${SSL_OUTPUT_DIR}"
-  init_ssl_pki_structure
-
-  if [[ ! -f "${SSL_CA_CRT}" || ! -f "${SSL_CA_KEY}" ]]; then
-    warn "CA certificates not found in ${SSL_CONFIG_DIR}."
-    warn "A new CA will be created automatically. It is recommended to initialize it properly first."
-    info "If you want to import an existing CA, place ca.crt and ca.key in ${SSL_CONFIG_DIR} before running this script."
-  fi
-
-  prepare_ssl_ca
 }
 
 # -----------------------------
