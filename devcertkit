@@ -28,7 +28,7 @@ source "${SCRIPT_DIR}/scripts/common/easyrsa-prepare.sh"
 source "${SCRIPT_DIR}/scripts/ssl/ssl-commands.sh"
 
 # -----------------------------
-# General operation
+# Helper
 # -----------------------------
 show_help() {
   cat <<EOF
@@ -48,6 +48,9 @@ Options:
 EOF
 }
 
+# -----------------------------
+# General operation
+# -----------------------------
 init_easyrsa() {
   local easyrsa_path="${1:-${EASYRSA_PATH:-}}"
   local easyrsa_path_found

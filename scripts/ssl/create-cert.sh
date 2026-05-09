@@ -62,6 +62,51 @@ DOMAINS=()
 # -----------------------------
 # Helpers
 # -----------------------------
+show_help() {
+  cat <<EOF
+Usage: ./${SCRIPT_NAME} [OPTIONS]
+
+Options:
+  -d, --domain <name>     Domain name for the certificate. Repeat for altNames.
+      --wildcard          Also include wildcard for the *first* domain (e.g. *.example.com).
+      --openwrt           Rename output files to OpenWrt/uhttpd defaults:
+                          uhttpd.crt and uhttpd.key (instead of <domain>.crt/.key).
+      --include-ca        Also copy ca.crt into the output directory (default: false).
+      --create-pem        Create an additional PEM bundle (cert + key, CA not included by default).
+      --clean             Delete the PKI directory and exit.
+      --batch             Run EasyRSA in batch mode (non-interactive) if supported.
+      --no-archive        Do not create a 7z archive.
+      --out-dir <path>    Output directory (default: ${SSL_OUTPUT_DIR})
+      --ca-dir <path>     Existing CA directory (default: ${SSL_CONFIG_DIR})
+  -h, --help              Show this help message.
+
+Examples:
+  # Simple cert (CN=example.com)
+  ./${SCRIPT_NAME} -d example.com
+
+  # With additional SAN
+  ./${SCRIPT_NAME} -d example.com -d www.example.com
+
+  # Wildcard for first domain (CN=*.example.com, SAN includes example.com + *.example.com)
+  ./${SCRIPT_NAME} --wildcard -d example.com
+
+  # OpenWrt uhttpd filenames (uhttpd.crt/uhttpd.key)
+  ./${SCRIPT_NAME} --openwrt -d example.com
+
+  # OpenWrt + include CA cert
+  ./${SCRIPT_NAME} --openwrt --include-ca -d example.com
+
+  # Custom output directory, skip archive
+  ./${SCRIPT_NAME} --out-dir ../certs --no-archive -d example.com
+
+  # Create cert, key and PEM bundle (PEM contains cert + key + CA)
+  ./${SCRIPT_NAME} -d example.com --create-pem --include-ca
+
+  # Create cert + key + PEM bundle (without CA certificate)
+  ./${SCRIPT_NAME} -d example.com --create-pem
+EOF
+}
+
 cleanup_on_error() {
   local exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
@@ -186,52 +231,6 @@ create_pem_bundle() {
 
   info "PEM bundle created: $(basename "$pem_file")"
 }
-
-show_help() {
-  cat <<EOF
-Usage: ./${SCRIPT_NAME} [OPTIONS]
-
-Options:
-  -d, --domain <name>     Domain name for the certificate. Repeat for altNames.
-      --wildcard          Also include wildcard for the *first* domain (e.g. *.example.com).
-      --openwrt           Rename output files to OpenWrt/uhttpd defaults:
-                          uhttpd.crt and uhttpd.key (instead of <domain>.crt/.key).
-      --include-ca        Also copy ca.crt into the output directory (default: false).
-      --create-pem        Create an additional PEM bundle (cert + key, CA not included by default).
-      --clean             Delete the PKI directory and exit.
-      --batch             Run EasyRSA in batch mode (non-interactive) if supported.
-      --no-archive        Do not create a 7z archive.
-      --out-dir <path>    Output directory (default: ${SSL_OUTPUT_DIR})
-      --ca-dir <path>     Existing CA directory (default: ${SSL_CONFIG_DIR})
-  -h, --help              Show this help message.
-
-Examples:
-  # Simple cert (CN=example.com)
-  ./${SCRIPT_NAME} -d example.com
-
-  # With additional SAN
-  ./${SCRIPT_NAME} -d example.com -d www.example.com
-
-  # Wildcard for first domain (CN=*.example.com, SAN includes example.com + *.example.com)
-  ./${SCRIPT_NAME} --wildcard -d example.com
-
-  # OpenWrt uhttpd filenames (uhttpd.crt/uhttpd.key)
-  ./${SCRIPT_NAME} --openwrt -d example.com
-
-  # OpenWrt + include CA cert
-  ./${SCRIPT_NAME} --openwrt --include-ca -d example.com
-
-  # Custom output directory, skip archive
-  ./${SCRIPT_NAME} --out-dir ../certs --no-archive -d example.com
-
-  # Create cert, key and PEM bundle (PEM contains cert + key + CA)
-  ./${SCRIPT_NAME} -d example.com --create-pem --include-ca
-
-  # Create cert + key + PEM bundle (without CA certificate)
-  ./${SCRIPT_NAME} -d example.com --create-pem
-EOF
-}
-
 
 # -----------------------------
 # Environment checks & setup
