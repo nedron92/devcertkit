@@ -63,10 +63,26 @@ get_cert_path_by_domain() {
     cert_path="${SSL_OUTPUT_DIR}/${safe_name}/uhttpd.crt"
   fi
   
+  # Fallback: try wildcard path for given domain
+  if [[ ! -f "$cert_path" ]]; then
+    local wildcard_name
+    wildcard_name="$(sanitize_name "*.${domain}")"
+    
+    local wildcard_cert_path="${SSL_OUTPUT_DIR}/${wildcard_name}/${wildcard_name}.crt"
+    if [[ ! -f "$wildcard_cert_path" ]]; then
+      wildcard_cert_path="${SSL_OUTPUT_DIR}/${wildcard_name}/uhttpd.crt"
+    fi
+    
+    if [[ -f "$wildcard_cert_path" ]]; then
+      warn "Exact match not found for '${domain}', using wildcard certificate: ${wildcard_name}"
+      cert_path="$wildcard_cert_path"
+    fi
+  fi
+
   if [[ -f "$cert_path" ]]; then
     echo "$cert_path"
   else
-    fail "No certificate found for domain '${domain}' in ${SSL_OUTPUT_DIR}/${safe_name}/"
+    fail "No certificate found for domain '${domain}' in ${SSL_OUTPUT_DIR}/${safe_name}/ (also tried wildcard)"
   fi
 }
 

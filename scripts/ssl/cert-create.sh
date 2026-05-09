@@ -260,7 +260,9 @@ create_ssl_cert() {
     gen-req "${cn}" nopass
 
   info "\nSigning request as server cert..."
-  "${EASYRSA_BIN}" sign-req server "${cn}"
+  "${EASYRSA_BIN}" \
+    --subject-alt-name="${san}" \
+    sign-req server "${cn}"
   info "Finished signing."
 
   # Copy generated files
@@ -310,7 +312,14 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -d|--domain)
       [[ -n "${2:-}" ]] || fail "Missing value for $1"
-      DOMAINS+=("$2")
+      val="$2"
+      # Autodetect wildcard if first domain starts with *.
+      if [[ ${#DOMAINS[@]} -eq 0 && "$val" == \*.* ]]; then
+        WILDCARD="true"
+        val="${val#*.}"
+        info "Autodetected wildcard for base domain: ${val}"
+      fi
+      DOMAINS+=("$val")
       shift 2
       ;;
     --wildcard)
