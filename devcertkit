@@ -46,12 +46,28 @@ It simplifies PKI management using EasyRSA as a backend.
 Commands:
   init        Initializes the workspace, resolves EasyRSA, and prepares the environment.
   ssl         SSL-specific commands (PKI initialization, certificate creation, etc.)
+  version     Show the current version
   help        Show this help message
 
 Options:
   -h, --help               Show this help message
+  -v, --version            Show the current version
   --easyrsa-path <path>    Path to the installed EasyRSA directory
 EOF
+}
+
+show_version() {
+  # Displays the current version of devcertkit.
+  # The version is read from the VERSION file in the project root.
+
+  local version_file="${SCRIPT_DIR}/VERSION"
+  if [[ -f "$version_file" ]]; then
+    VERSION="$(cat "$version_file")"
+    info "devcertkit ${VERSION}"
+    info "Internal SSL/VPN certificate toolkit"
+  else
+    warn "devcertkit version (unknown)"
+  fi
 }
 
 # -----------------------------
@@ -137,6 +153,10 @@ case "${MAIN_CMD}" in
     ;;
   ssl)
     run_ssl_commands "$@"
+    ;;
+  version|-v|--version)
+    show_version
+    exit 0
     ;;
   -h|--help|help|"?")
     show_help

@@ -1,4 +1,4 @@
-# devcertkit - Version 0.1.0
+# devcertkit
 
 Simple toolkit for generating internal SSL certificates and VPN infrastructure artifacts (OpenVPN) using your own private Certificate Authority (CA).
 
@@ -177,12 +177,13 @@ Create PEM bundle:
 # Main Commands
 
 - `init`: Setup the workspace and link EasyRSA.
+- `version`: Show the current version.
 - `ssl init`: Setup the SSL PKI and CA.
 - `ssl cert create`: Generate and sign new SSL certificates.
 - `ssl ca info`: Show information about the current SSL CA.
 - `ssl cert info`: Show information about a generated certificate.
 
-Run `./devcertkit help` or `./devcertkit ssl help` for more details.
+Run `./devcertkit help`, `./devcertkit version` or `./devcertkit ssl help` for more details.
 
 ---
 
