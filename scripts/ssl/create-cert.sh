@@ -46,8 +46,8 @@ source "${SCRIPT_DIR}/../common/shared.sh"
 source "${SCRIPT_DIR}/../common/paths.sh"
 export EASYRSA_PKI="${SSL_PKI_DIR}"
 
-# shellcheck source=./init.sh
-source "${SCRIPT_DIR}/init.sh"
+# shellcheck source=./ssl-pki.sh
+source "${SCRIPT_DIR}/ssl-pki.sh"
 
 WILDCARD="false"
 CLEAN_ONLY="false"
