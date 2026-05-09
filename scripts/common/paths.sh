@@ -15,7 +15,7 @@ EASYRSA_DIR="${RUNTIME_DIR}/.easyrsa"
 EASYRSA_BIN="${EASYRSA_DIR}/easyrsa"
 EASYRSA_CONFIG_DIR="${CONFIG_DIR}/easyrsa"
 
-# SSL PKI paths
+# SSL related paths
 SSL_CONFIG_DIR="${CONFIG_DIR}/ca/ssl"
 SSL_CA_CRT="${SSL_CONFIG_DIR}/ca.crt"
 SSL_CA_KEY="${SSL_CONFIG_DIR}/ca.key"
@@ -25,7 +25,7 @@ SSL_OUTPUT_DIR="${OUTPUT_DIR}/certs"
 SSL_VARS_FILE="${EASYRSA_CONFIG_DIR}/vars.ssl"
 SSL_VARS_FILE_DEFAULT="${EASYRSA_CONFIG_DIR}/vars.ssl.default"
 
-# VPN PKI paths
+# VPN related paths
 VPN_CONFIG_DIR="${CONFIG_DIR}/ca/vpn"
 VPN_CA_CRT="${VPN_CONFIG_DIR}/ca.crt"
 VPN_CA_KEY="${VPN_CONFIG_DIR}/ca.key"

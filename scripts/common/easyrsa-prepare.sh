@@ -1,6 +1,18 @@
-resolve_easyrsa() {
-  local user_path="${1:-}"
+#!/usr/bin/env bash
 
+# This script provides helper functions to prepare and manage EasyRSA PKI structures.
+# It handles finding the EasyRSA binary, initializing PKI directories,
+# and importing or building Certificate Authorities (CA).
+
+resolve_easyrsa() {
+  # Locates the EasyRSA installation directory.
+  # If a path is provided, it verifies it. Otherwise, it checks common system paths.
+  # Arguments:
+  #   $1: optional user-provided path to EasyRSA
+  # Returns:
+  #   The absolute path to the EasyRSA directory.
+
+  local user_path="${1:-}"
   if [[ -n "$user_path" ]]; then
     [[ -d "$user_path" ]] || fail "EasyRSA path does not exist: $user_path"
     [[ -x "$user_path/easyrsa" ]] || fail "No easyrsa binary found in: $user_path"
@@ -24,6 +36,13 @@ resolve_easyrsa() {
 }
 
 init_pki_structure() {
+  # Initializes the EasyRSA PKI structure in the specified directory.
+  # Arguments:
+  #   $1: PKI directory
+  #   $2: PKI private directory
+  #   $3: PKI type (for logging)
+  #   $4: force re-initialization (default: false)
+
   local pki_dir="${1:?PKI directory is required}"
   local pki_private_dir="${2:?PKI private directory is required}"
   local pki_type="${3:?PKI type is required}"
@@ -50,6 +69,12 @@ init_pki_structure() {
 }
 
 import_ca() {
+  # Imports an existing CA certificate and key (from the config-directory) into the PKI structure.
+  # Arguments:
+  #   $1: CA source directory
+  #   $2: PKI destination directory
+  #   $3: PKI private destination directory
+
   local ca_dir="${1:?CA config directory is required}"
   local pki_dir="${2:?PKI directory is required}"
   local pki_private_dir="${3:?PKI private directory is required}"
@@ -81,6 +106,13 @@ import_ca() {
 }
 
 build_new_ca() {
+  # Builds a new Certificate Authority using EasyRSA.
+  # The generated files are then copied back to the specified CA configuration directory.
+  # Arguments:
+  #   $1: CA config directory (to store the generated files)
+  #   $2: PKI directory
+  #   $3: PKI private directory
+
   local ca_dir="${1:?CA config directory is required}"
   local pki_dir="${2:?PKI directory is required}"
   local pki_private_dir="${3:?PKI private directory is required}"
@@ -101,6 +133,14 @@ build_new_ca() {
 }
 
 prepare_ca() {
+  # Orchestrates the CA preparation.
+  # It checks if the CA already exists in the PKI. If not, it either imports
+  # an existing CA from the config directory or builds a new one.
+  # Arguments:
+  #   $1: CA config directory
+  #   $2: PKI directory
+  #   $3: PKI private directory
+
   local ca_dir="${1:?CA config directory is required}"
   local pki_dir="${2:?PKI directory is required}"
   local pki_private_dir="${3:?PKI private directory is required}"

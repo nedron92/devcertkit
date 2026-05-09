@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
-# SSL subcommands for devcertkit
-# This file is sourced by the main devcertkit script.
+# This script implements the SSL subcommands for the devcertkit tool.
+# It handles initializing the SSL PKI, managing the SSL CA, and
+# dispatching certificate creation requests.
+#
+# This file is intended to be sourced by the main devcertkit script.
 
 # Resolve the script directory of this file, independent of the caller.
 SSL_COMMANDS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -13,6 +16,8 @@ source "${SSL_COMMANDS_SCRIPT_DIR}/ssl-pki.sh"
 # Helpers
 # -----------------------------
 show_ssl_help() {
+  # Displays the help message for the SSL subcommand.
+
   cat <<EOF
 Usage: ./devcertkit ssl <command> [options]
 
@@ -27,6 +32,9 @@ EOF
 }
 
 check_easyrsa_availability() {
+  # Verifies that the EasyRSA binary is available and executable.
+  # Fails with an error message if EasyRSA is missing.
+
   if [[ ! -x "${EASYRSA_DIR}/easyrsa" ]]; then
     warn "EasyRSA binary not found or not executable at ${EASYRSA_DIR}/easyrsa."
     fail "You need to initialize the devcertkit workspace first with 'devcertkit init'."
@@ -37,6 +45,10 @@ check_easyrsa_availability() {
 # General operation
 # -----------------------------
 run_ssl_init() {
+  # Initializes the SSL PKI structure.
+  # It sets up the PKI directories and either imports an existing CA
+  # or prompts the user to create a new one.
+
   check_easyrsa_availability
   info "Initializing SSL PKI structure..."
   init_ssl_pki_structure
@@ -56,6 +68,10 @@ run_ssl_init() {
 }
 
 _run_ssl_ca_create() {
+  # Internal function to create a new SSL CA.
+  # It warns the user about overwriting existing files and performs a backup
+  # of current CA files if they exist before proceeding with creation.
+
   check_easyrsa_availability
 
   warn "You are about to create a new CA. This will overwrite any existing CA files in the PKI and re-init it."
@@ -86,6 +102,12 @@ _run_ssl_ca_create() {
 # Main
 # -----------------------------
 run_ssl_commands() {
+  # Main entry point for SSL subcommands.
+  # Dispatches the command to the appropriate handler function.
+  # Arguments:
+  #   $1: SSL subcommand (init, ca, cert, help, etc.)
+  #   $@: remaining arguments for the subcommand
+
   local cmd="${1:-}"
   shift || true
 
@@ -112,6 +134,11 @@ run_ssl_commands() {
 }
 
 run_ssl_ca_commands() {
+  # Dispatches SSL CA-related subcommands.
+  # Arguments:
+  #   $1: CA subcommand (create, etc.)
+  #   $@: remaining arguments for the subcommand
+
   local subcmd="${1:-}"
   shift || true
 
@@ -129,6 +156,12 @@ run_ssl_ca_commands() {
 }
 
 run_ssl_cert_commands() {
+  # Dispatches SSL certificate-related subcommands.
+  # Currently handles 'create' by calling the create-cert.sh script.
+  # Arguments:
+  #   $1: cert subcommand (create, etc.)
+  #   $@: remaining arguments for the subcommand
+
   local subcmd="${1:-}"
   shift || true
 
