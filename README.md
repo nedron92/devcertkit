@@ -1,4 +1,4 @@
-# devcertkit - Version 0.0.1
+# devcertkit - Version 0.1.0
 
 Simple toolkit for generating internal SSL certificates and related infrastructure artifacts using your own private Certificate Authority (CA).
 
