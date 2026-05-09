@@ -169,7 +169,10 @@ if [[ "$SHORT_MODE" == "true" ]]; then
         info "Expires on: $NOT_AFTER ($REMAINING_DAYS days remaining)"
     fi
 else
-    info "Certificate Information for: ${DOMAIN:-$TARGET_CERT}"
+    DISPLAY_NAME="${DOMAIN:-$FILE_PATH}"
+    [[ -z "$DISPLAY_NAME" ]] && DISPLAY_NAME="$TARGET_CERT"
+
+    info "Certificate Information for: ${DISPLAY_NAME}"
     info "--------------------------------------------------------"
     info "Subject CN:      $CN"
     info "Issuer:          $ISSUER"

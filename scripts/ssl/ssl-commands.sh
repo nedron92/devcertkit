@@ -2,7 +2,7 @@
 
 # This script implements the SSL subcommands for the devcertkit tool.
 # It handles initializing the SSL PKI, managing the SSL CA, and
-# dispatching certificate creation requests.
+# dispatching certificate creation and inspection requests.
 #
 # This file is intended to be sourced by the main devcertkit script.
 
@@ -24,6 +24,7 @@ Usage: ./devcertkit ssl <command> [options]
 Commands:
   init          Initialize SSL PKI structure and prepare CA
   ca create     Create a new SSL CA
+  ca info       Display information about the SSL CA
   cert create   Create a new SSL certificate
   cert info     Display information about an existing certificate
   help          Show this help message
@@ -99,6 +100,18 @@ _run_ssl_ca_create() {
   fi
 }
 
+_run_ssl_ca_info() {
+  # Displays information about the current SSL CA.
+  # It uses the cert-info.sh script to read the CA certificate file.
+
+  if [[ ! -f "${SSL_CA_CRT}" ]]; then
+    fail "SSL CA certificate not found at ${SSL_CA_CRT}. Have you initialized the CA?"
+  fi
+
+  info "SSL CA Information"
+  "${SSL_COMMANDS_SCRIPT_DIR}/cert-info.sh" --file "${SSL_CA_CRT}" "$@"
+}
+
 # -----------------------------
 # Main
 # -----------------------------
@@ -137,7 +150,7 @@ run_ssl_commands() {
 run_ssl_ca_commands() {
   # Dispatches SSL CA-related subcommands.
   # Arguments:
-  #   $1: CA subcommand (create, etc.)
+  #   $1: CA subcommand (create, info, etc.)
   #   $@: remaining arguments for the subcommand
 
   local subcmd="${1:-}"
@@ -146,6 +159,9 @@ run_ssl_ca_commands() {
   case "$subcmd" in
     create)
       _run_ssl_ca_create "$@"
+      ;;
+    info)
+      _run_ssl_ca_info "$@"
       ;;
     *)
       if [[ -n "$subcmd" ]]; then
@@ -158,9 +174,9 @@ run_ssl_ca_commands() {
 
 run_ssl_cert_commands() {
   # Dispatches SSL certificate-related subcommands.
-  # Currently handles 'create' by calling the cert-create.sh script.
+  # Handles 'create' and 'info' by calling the respective scripts.
   # Arguments:
-  #   $1: cert subcommand (create, etc.)
+  #   $1: cert subcommand (create, info, etc.)
   #   $@: remaining arguments for the subcommand
 
   local subcmd="${1:-}"
