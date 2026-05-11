@@ -1,0 +1,6 @@
+# VPN configuration
+VPN_HOSTS=(
+  "xx.xxx.xx.xxx"
+)
+VPN_PORT="1194"
+VPN_PORT_FALLBACK="8443"
