@@ -53,9 +53,10 @@ patch_ovpn_client_placeholders() {
   # Replace client-related placeholders in OpenVPN config templates.
   #
   # Supported placeholders:
-  #   __CLIENT__ 	-> client name
-  #   __VPN_HOST__ 	-> VPN server host
-  #   __VPN_PORT__ 	-> VPN server port
+  #   __CLIENT__ 	            -> client name
+  #   __VPN_HOST__ 	          -> VPN server host
+  #   __VPN_PORT__ 	          -> VPN server port
+  #   __VPN_PORT_FALLBACK__ 	-> VPN server port, fallback (tcp)
 
   local config_file="$1"
   local client_name="$2"

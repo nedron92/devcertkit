@@ -21,9 +21,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=../common/shared.sh
 source "${SCRIPT_DIR}/../common/shared.sh"
-
 # shellcheck source=../common/paths.sh
 source "${SCRIPT_DIR}/../common/paths.sh"
+
 # shellcheck source=./ssl-pki.sh
 source "${SCRIPT_DIR}/ssl-pki.sh"
 
@@ -273,7 +273,7 @@ create_ssl_cert() {
   local output_dir="${SSL_OUTPUT_DIR}/${safe_name}"
   cp -f "${issued_crt}" "${output_dir}/${safe_name}.crt"
   cp -f "${private_key}" "${output_dir}/${safe_name}.key"
-  
+
   if [[ "${INCLUDE_CA}" == "true" ]]; then
 	  cp -f "${SSL_PKI_DIR}/ca.crt" "${output_dir}/ca.crt"
   fi
@@ -281,15 +281,15 @@ create_ssl_cert() {
   info "\nWrote:"
   info "  ${output_dir}/${safe_name}.crt"
   info "  ${output_dir}/${safe_name}.key"
-  
+
   if [[ "${INCLUDE_CA}" == "true" ]]; then
 	  info "  ${output_dir}/ca.crt"
   fi
-  
+
   if [[ "${OPENWRT}" == "true" ]]; then
 	  rename_to_openwrt_uhttpd_files "${safe_name}" "${output_dir}"
   fi
-  
+
   if [[ "${CREATE_PEM}" == "true" ]]; then
 	  create_pem_bundle "${safe_name}" "${output_dir}"
   fi
