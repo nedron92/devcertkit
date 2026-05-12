@@ -27,6 +27,7 @@ Commands:
   ca import         Import an existing VPN CA from config
   ca info           Display information about the VPN CA
   client create     Create a new VPN client with config-file and certificates
+  client info       Display information about an existing VPN client certificate
   clean             Delete the VPN PKI directory
   help              Show this help message
 
@@ -126,8 +127,8 @@ _run_vpn_ca_info() {
   fi
 
   info "VPN CA Information"
-  # Using the existing cert-info.sh from ssl directory as it is generic enough
-  "${VPN_COMMANDS_SCRIPT_DIR}/../ssl/cert-info.sh" --file "${VPN_CA_CRT}" "$@"
+  # Using the existing cert-info.sh from common directory
+  "${VPN_COMMANDS_SCRIPT_DIR}/../common/cert-info.sh" --file "${VPN_CA_CRT}" "$@"
 }
 
 run_vpn_clean() {
@@ -235,9 +236,13 @@ Usage: ./devcertkit vpn client <command> [options]
 
 Commands:
   create        Create a new VPN client with config-file and certificates
+  info          Display information about an existing VPN client certificate
 
 Run './devcertkit vpn client <command> --help' for more information on a command.
 EOF
+      ;;
+    info)
+      "${VPN_COMMANDS_SCRIPT_DIR}/../common/cert-info.sh" "$@"
       ;;
     *)
       if [[ -n "$subcmd" ]]; then

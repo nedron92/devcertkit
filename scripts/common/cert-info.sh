@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # Part of the devcertkit toolkit.
-# This script displays information about an existing SSL certificate.
-# It can read certificates by domain name (searching in output/certs)
+# This script displays information about an existing SSL / CA / VPN CA certificate.
+# It can read certificates by domain- or client name (searching in output/*)
 # or by absolute file path.
 #
 
@@ -14,12 +14,10 @@ set -Eeuo pipefail
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck source=../common/shared.sh
-source "${SCRIPT_DIR}/../common/shared.sh"
-# shellcheck source=../common/paths.sh
-source "${SCRIPT_DIR}/../common/paths.sh"
-# shellcheck source=./ssl-pki.sh
-source "${SCRIPT_DIR}/ssl-pki.sh"
+# shellcheck source=./shared.sh
+source "${SCRIPT_DIR}/shared.sh"
+# shellcheck source=./paths.sh
+source "${SCRIPT_DIR}/paths.sh"
 
 SHORT_MODE="false"
 FILE_PATH=""
@@ -30,59 +28,66 @@ DOMAIN=""
 # -----------------------------
 show_help() {
   cat <<EOF
-Usage: ./devcertkit ssl cert info <domain> [OPTIONS]
-       ./devcertkit ssl cert info --file <path> [OPTIONS]
+Usage: ./devcertkit <ssl|vpn> cert info <domain|client> [OPTIONS]
+       ./devcertkit <ssl|vpn> cert info --file <path> [OPTIONS]
 
-Display information about an existing SSL certificate.
+Display information about an existing certificate.
 
 Arguments:
-  <domain>              Domain name (e.g., git.home or *.git.home)
-                        The script will search in ${SSL_OUTPUT_DIR}.
+  <domain|client>       Domain name (SSL) or Client name (VPN).
+                        The script will search in appropriate output directory.
 
 Options:
   --file <path>         Absolute path to the certificate file.
   --short               Only display expiration date and remaining validity.
   -h, --help            Show this help message.
-
-Examples:
-  ./devcertkit ssl cert info git.home
-  ./devcertkit ssl cert info --file /path/to/cert.crt
-  ./devcertkit ssl cert info *.git.home --short
 EOF
 }
 
-get_cert_path_by_domain() {
-  local domain="$1"
+get_cert_path_by_name() {
+  local name="$1"
   local safe_name
-  safe_name="$(sanitize_name "$domain")"
-  
-  local cert_path="${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.crt"
-  
-  # Fallback: maybe it was renamed to uhttpd.crt
-  if [[ ! -f "$cert_path" ]]; then
-    cert_path="${SSL_OUTPUT_DIR}/${safe_name}/uhttpd.crt"
+  safe_name="$(sanitize_name "$name")"
+
+  local cert_path=""
+
+  # Try SSL output directory
+  if [[ -d "${SSL_OUTPUT_DIR:-}" ]]; then
+    cert_path="${SSL_OUTPUT_DIR}/${safe_name}/${safe_name}.crt"
+    # Fallback: maybe it was renamed to uhttpd.crt
+    if [[ ! -f "$cert_path" ]]; then
+      cert_path="${SSL_OUTPUT_DIR}/${safe_name}/uhttpd.crt"
+    fi
+
+    # Fallback: try wildcard path for given domain
+    if [[ ! -f "$cert_path" ]]; then
+      local wildcard_name
+      wildcard_name="$(sanitize_name "*.${name}")"
+
+      local wildcard_cert_path="${SSL_OUTPUT_DIR}/${wildcard_name}/${wildcard_name}.crt"
+      if [[ ! -f "$wildcard_cert_path" ]]; then
+        wildcard_cert_path="${SSL_OUTPUT_DIR}/${wildcard_name}/uhttpd.crt"
+      fi
+
+      if [[ -f "$wildcard_cert_path" ]]; then
+        cert_path="$wildcard_cert_path"
+      fi
+    fi
   fi
-  
-  # Fallback: try wildcard path for given domain
-  if [[ ! -f "$cert_path" ]]; then
-    local wildcard_name
-    wildcard_name="$(sanitize_name "*.${domain}")"
-    
-    local wildcard_cert_path="${SSL_OUTPUT_DIR}/${wildcard_name}/${wildcard_name}.crt"
-    if [[ ! -f "$wildcard_cert_path" ]]; then
-      wildcard_cert_path="${SSL_OUTPUT_DIR}/${wildcard_name}/uhttpd.crt"
-    fi
-    
-    if [[ -f "$wildcard_cert_path" ]]; then
-      warn "Exact match not found for '${domain}', using wildcard certificate: ${wildcard_name}"
-      cert_path="$wildcard_cert_path"
-    fi
+
+  # Try VPN output directory if not found in SSL
+  if [[ ! -f "$cert_path" && -d "${VPN_OUTPUT_DIR:-}" ]]; then
+     # For VPN clients, the path is often output/clients/<client>/<client>.crt
+     local vpn_cert_path="${VPN_OUTPUT_DIR}/${safe_name}/${safe_name}.crt"
+     if [[ -f "$vpn_cert_path" ]]; then
+       cert_path="$vpn_cert_path"
+     fi
   fi
 
   if [[ -f "$cert_path" ]]; then
     echo "$cert_path"
   else
-    fail "No certificate found for domain '${domain}' in ${SSL_OUTPUT_DIR}/${safe_name}/ (also tried wildcard)"
+    fail "No certificate found for '${name}' in SSL or VPN output directories."
   fi
 }
 
@@ -136,7 +141,7 @@ TARGET_CERT=""
 if [[ -n "$FILE_PATH" ]]; then
   TARGET_CERT="$FILE_PATH"
 else
-  TARGET_CERT="$(get_cert_path_by_domain "$DOMAIN")"
+  TARGET_CERT="$(get_cert_path_by_name "$DOMAIN")"
 fi
 
 check_file "$TARGET_CERT"

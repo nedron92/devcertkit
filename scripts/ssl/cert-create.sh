@@ -24,8 +24,8 @@ source "${SCRIPT_DIR}/../common/shared.sh"
 # shellcheck source=../common/paths.sh
 source "${SCRIPT_DIR}/../common/paths.sh"
 
-# shellcheck source=./ssl-pki.sh
-source "${SCRIPT_DIR}/ssl-pki.sh"
+# Keep the SSL PKI location explicit for all SSL commands.
+export EASYRSA_PKI="${SSL_PKI_DIR}"
 
 WILDCARD="false"
 ARCHIVE="true"   	# if false -> skip 7z

@@ -127,7 +127,7 @@ _run_ssl_ca_info() {
   fi
 
   info "SSL CA Information"
-  "${SSL_COMMANDS_SCRIPT_DIR}/cert-info.sh" --file "${SSL_CA_CRT}" "$@"
+  "${SSL_COMMANDS_SCRIPT_DIR}/../common/cert-info.sh" --file "${SSL_CA_CRT}" "$@"
 }
 
 run_ssl_clean() {
@@ -230,7 +230,7 @@ run_ssl_cert_commands() {
       "${SSL_COMMANDS_SCRIPT_DIR}/cert-create.sh" "$@"
       ;;
     info)
-      "${SSL_COMMANDS_SCRIPT_DIR}/cert-info.sh" "$@"
+      "${SSL_COMMANDS_SCRIPT_DIR}/../common/cert-info.sh" "$@"
       ;;
     -h|--help|help|"?")
       cat <<EOF

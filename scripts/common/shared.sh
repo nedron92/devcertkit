@@ -62,3 +62,34 @@ need_cmd() {
 
   command -v "$1" >/dev/null 2>&1 || fail "Missing dependency: '$1'"
 }
+
+sanitize_name() {
+  # Converts a name (e.g. domain) into a filesystem-safe identifier by replacing
+  # dots and other special characters with underscores.
+  # Arguments:
+  #   $1: input string
+  # Returns:
+  #   A sanitized string suitable for file and directory names.
+  #
+  # Examples:
+  #   "*.example.com"  -> "wildcard_example_com"
+  #   "example.com"    -> "example_com"
+  #
+  local input="$1"
+  local name
+
+  # Handle wildcard prefix explicitly
+  if [[ "$input" == \*.* ]]; then
+    name="wildcard_${input#*.}"
+  else
+    name="$input"
+  fi
+
+  # Replace dots with underscores
+  name="${name//./_}"
+
+  # Replace any remaining invalid characters with underscore
+  name="$(echo "$name" | sed 's/[^a-zA-Z0-9_-]/_/g')"
+
+  echo "$name"
+}
