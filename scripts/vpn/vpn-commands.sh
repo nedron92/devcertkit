@@ -228,7 +228,7 @@ run_vpn_client_commands() {
   case "$subcmd" in
     create)
       check_easyrsa_availability
-      "${VPN_COMMANDS_SCRIPT_DIR}/cert-create.sh" "$@"
+      "${VPN_COMMANDS_SCRIPT_DIR}/client-create.sh" "$@"
       ;;
     -h|--help|help|"?")
       cat <<EOF
