@@ -23,7 +23,8 @@ Usage: ./devcertkit vpn <command> [options]
 
 Commands:
   init              Initialize VPN PKI structure and prepare CA.
-  ca create         Create a new VPN CA (interactively).
+  ca create         Create a new VPN CA (default: without password).
+                    Options: --pass  Create CA with a password.
   ca import         Import an existing VPN CA from config/ca/vpn/.
   ca info           Display information about the VPN CA.
   ca gen-tls        Generate OpenVPN TLS-AUTH key (ta.key).
@@ -44,6 +45,12 @@ check_easyrsa_availability() {
     warn "EasyRSA binary not found or not executable at ${EASYRSA_BIN}."
     fail "You need to initialize the devcertkit workspace first with 'devcertkit init'."
   fi
+}
+
+check_vpn_dependencies() {
+  # Checks for dependencies required specifically for VPN operations.
+  check_easyrsa_availability
+  need_cmd "openvpn"
 }
 
 # -----------------------------
@@ -94,7 +101,7 @@ run_vpn_init() {
 
 _run_vpn_ca_import() {
   # Imports an existing VPN CA into the PKI.
-  check_easyrsa_availability
+  check_vpn_dependencies
   import_vpn_ca
 }
 
@@ -102,8 +109,15 @@ _run_vpn_ca_create() {
   # Internal function to create a new VPN CA.
   # It warns the user about overwriting existing files and performs a backup
   # of current CA files if they exist before proceeding with creation.
+  # Arguments:
+  #   $1: optional --pass flag
 
-  check_easyrsa_availability
+  local use_pass="false"
+  if [[ "${1:-}" == "--pass" ]]; then
+    use_pass="true"
+  fi
+
+  check_vpn_dependencies
 
   warn "You are about to create a new CA. This will overwrite any existing CA files in the PKI and re-init it."
   echo -n "Are you sure you want to proceed? (y/N): "
@@ -123,7 +137,7 @@ _run_vpn_ca_create() {
     fi
 
     init_vpn_pki_structure "true"
-    create_vpn_ca
+    create_vpn_ca "${use_pass}"
 
     if [[ ! -f "${VPN_TA_KEY}" ]]; then
       warn "VPN TLS key (ta.key) is missing."
@@ -154,7 +168,7 @@ _run_vpn_ca_info() {
 
 _run_vpn_gen_tls_key() {
   # Generates a new VPN TLS-AUTH key.
-  check_easyrsa_availability
+  check_vpn_dependencies
   generate_vpn_ta_key
 }
 

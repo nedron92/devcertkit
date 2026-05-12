@@ -135,10 +135,17 @@ import_vpn_ca() {
 
 create_vpn_ca() {
   # Creates a new VPN Certificate Authority and saves it to the configuration directory.
+  # Arguments:
+  #   $1: use password for CA (default: false)
+
+  local use_pass="${1:-false}"
+  local nopass="true"
+  [[ "${use_pass}" == "true" ]] && nopass="false"
 
   copy_vpn_vars "${VPN_PKI_DIR}"
   copy_vpn_ta_key
-  build_new_ca "${VPN_CONFIG_DIR}" "${VPN_PKI_DIR}" "${VPN_PKI_PRIVATE_DIR}"
+  # Create VPN CA (default: without password)
+  build_new_ca "${VPN_CONFIG_DIR}" "${VPN_PKI_DIR}" "${VPN_PKI_PRIVATE_DIR}" "${nopass}"
 }
 
 clear_vpn_pki() {

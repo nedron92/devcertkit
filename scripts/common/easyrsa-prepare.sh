@@ -116,6 +116,7 @@ build_new_ca() {
   local ca_dir="${1:?CA config directory is required}"
   local pki_dir="${2:?PKI directory is required}"
   local pki_private_dir="${3:?PKI private directory is required}"
+  local nopass="${4:-false}"
 
   local ca_crt_dst="${ca_dir}/ca.crt"
   local ca_key_dst="${ca_dir}/ca.key"
@@ -123,7 +124,11 @@ build_new_ca() {
   info "Building new CA..."
   
   export EASYRSA_BATCH=
-  "${EASYRSA_BIN}" build-ca
+  if [[ "${nopass}" == "true" ]]; then
+    "${EASYRSA_BIN}" build-ca nopass
+  else
+    "${EASYRSA_BIN}" build-ca
+  fi
   
   # Copy generated cert-files from pki folder to config/ca**
   info "Copying generated CA files to ${ca_dir}..."
