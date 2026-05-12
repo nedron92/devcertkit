@@ -116,7 +116,7 @@ Generate a client configuration and certificates:
 **Options for client creation:**
 - `-t, --type <type>`: `general`, `mobile`, or `router`.
 - `--no-pass`: Skip password protection for the client key.
-- `--no-archive`: Skip 7z compression.
+- `--archive`: Create a 7z compression of the output directory.
 
 ---
 

@@ -16,7 +16,7 @@ SCRIPT_NAME="$(basename "$0")"
 export EASYRSA_PKI="${VPN_PKI_DIR}"
 
 TYPE="general"  	# set type (general | mobile | router), DEFAULT: general
-ARCHIVE="true"   	# if false -> skip 7z
+ARCHIVE="false"   # if true -> create 7z
 NO_PASS="false"  	# if true, create cert without a password
 
 # -----------------------------
@@ -80,7 +80,7 @@ Usage: ./devcertkit vpn client create [OPTIONS] <clientName>
 Options:
   -t, --type <type>      Client type: general | mobile | router (default: general).
       --no-pass          Create the client certificate without a password.
-      --no-archive       Do not create a 7z archive of the output.
+      --archive          Create a 7z archive of the output.
       --vpn-port <port>  Override the VPN server port in the client config (default: 1194).
   -h, --help             Show this help message.
 
@@ -118,8 +118,8 @@ while [[ $# -gt 0 ]]; do
       NO_PASS="true"
       shift
       ;;
-    --no-archive)
-      ARCHIVE="false"
+    --archive)
+      ARCHIVE="true"
       shift
       ;;
     --vpn-port)
@@ -246,7 +246,7 @@ create_vpn_client() {
     info "Compressing client directory..."
     ( cd "$(dirname "${output_dir}")" && 7z a -t7z "${CLIENT_NAME}.7z" "${CLIENT_NAME}" >/dev/null )
   else
-    info "Archive skipped (--no-archive)."
+    info "Archive skipped."
   fi
 
     info "Done."

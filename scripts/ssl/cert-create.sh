@@ -28,9 +28,9 @@ source "${SCRIPT_DIR}/../common/paths.sh"
 export EASYRSA_PKI="${SSL_PKI_DIR}"
 
 WILDCARD="false"
-ARCHIVE="true"   	# if false -> skip 7z
-BATCH="false"    	# if true -> set EASYRSA_BATCH=1 (non-interactive)
-OPENWRT="false"		# if true -> rename key/crt files directly to uhttpd.key / uhttpd.crt
+ARCHIVE="false"     # if true -> create 7z
+BATCH="false"    	  # if true -> set EASYRSA_BATCH=1 (non-interactive)
+OPENWRT="false"		  # if true -> rename key/crt files directly to uhttpd.key / uhttpd.crt
 INCLUDE_CA="false"	# if true -> include ca.crt directly in output-dir
 CREATE_PEM="false"	# if true -> create a pem-file directly in output-dir
 
@@ -52,7 +52,7 @@ Options:
       --include-ca        Include the CA certificate (ca.crt) in the output directory.
       --create-pem        Create a combined PEM bundle (cert + key).
       --batch             Run EasyRSA in batch mode (non-interactive).
-      --no-archive        Do not create a 7z archive of the output.
+      --archive           Create a 7z archive of the output.
       --out-dir <path>    Specify a custom output directory (default: ${SSL_OUTPUT_DIR}).
       --ca-dir <path>     Specify an existing CA directory (default: ${SSL_CONFIG_DIR}).
   -h, --help              Show this help message.
@@ -70,8 +70,8 @@ Examples:
   # Create a certificate for OpenWrt with CA included and PEM bundle
   ./devcertkit ssl cert create -d router.home --openwrt --include-ca --create-pem
 
-  # Custom output directory and skip archiving
-  ./devcertkit ssl cert create -d dev.local --out-dir ./my-certs --no-archive
+  # Custom output directory and enable archiving
+  ./devcertkit ssl cert create -d dev.local --out-dir ./my-certs --archive
 EOF
 }
 
@@ -318,8 +318,8 @@ while [[ $# -gt 0 ]]; do
       BATCH="true"
       shift
       ;;
-    --no-archive)
-      ARCHIVE="false"
+    --archive)
+      ARCHIVE="true"
       shift
       ;;
     --openwrt)
