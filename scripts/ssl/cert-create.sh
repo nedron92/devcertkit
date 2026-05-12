@@ -28,7 +28,7 @@ source "${SCRIPT_DIR}/../common/paths.sh"
 export EASYRSA_PKI="${SSL_PKI_DIR}"
 
 WILDCARD="false"
-ARCHIVE="false"     # if true -> create 7z
+ARCHIVE="false"     # if true -> create zip
 BATCH="false"    	  # if true -> set EASYRSA_BATCH=1 (non-interactive)
 OPENWRT="false"		  # if true -> rename key/crt files directly to uhttpd.key / uhttpd.crt
 INCLUDE_CA="false"	# if true -> include ca.crt directly in output-dir
@@ -52,7 +52,7 @@ Options:
       --include-ca        Include the CA certificate (ca.crt) in the output directory.
       --create-pem        Create a combined PEM bundle (cert + key).
       --batch             Run EasyRSA in batch mode (non-interactive).
-      --archive           Create a 7z archive of the output.
+      --archive           Create a zip archive of the output.
       --out-dir <path>    Specify a custom output directory (default: ${SSL_OUTPUT_DIR}).
       --ca-dir <path>     Specify an existing CA directory (default: ${SSL_CONFIG_DIR}).
   -h, --help              Show this help message.
@@ -190,9 +190,9 @@ ensure_environment() {
      fail "SSL PKI not initialized. Please run 'devcertkit ssl init' at first."
   fi
 
-  # If archiving is enabled, ensure 7z exists
+  # If archiving is enabled, ensure zip exists
   if [[ "${ARCHIVE}" == "true" ]]; then
-    need_cmd "7z"
+    need_cmd "zip"
   fi
 
   prepare_dir "${SSL_OUTPUT_DIR}"
@@ -286,8 +286,8 @@ create_ssl_cert() {
 
   if [[ "${ARCHIVE}" == "true" ]]; then
     info "\nCreating archive..."
-    ( cd "$(dirname "${output_dir}")" && 7z a -t7z "${safe_name}.7z" "${safe_name}" >/dev/null )
-    info "Done. Archive: ${SSL_OUTPUT_DIR}/${safe_name}.7z"
+    ( cd "$(dirname "${output_dir}")" && zip -r "${safe_name}.zip" "${safe_name}" >/dev/null )
+    info "Done. Archive: ${SSL_OUTPUT_DIR}/${safe_name}.zip"
   else
     info "\nDone. (Archive skipped)"
   fi

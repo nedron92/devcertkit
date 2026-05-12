@@ -33,7 +33,7 @@ Managing internal SSL and VPN configurations directly via OpenSSL or EasyRSA can
 - Support for Subject Alternative Names (SAN) and Wildcards.
 - OpenWRT/uhttpd compatibility mode.
 - Optional PEM and CA bundle creation.
-- Automated packaging of certificates via 7z.
+- Automated packaging of certificates via zip.
 
 ### VPN Management
 - Full OpenVPN CA and PKI management.
@@ -54,7 +54,7 @@ Managing internal SSL and VPN configurations directly via OpenSSL or EasyRSA can
 Ensure the following tools are installed:
 - Bash
 - OpenSSL
-- 7z (for packaging)
+- zip (for packaging)
 
 ### Setup
 1. Clone the repository.
@@ -116,7 +116,7 @@ Generate a client configuration and certificates:
 **Options for client creation:**
 - `-t, --type <type>`: `general`, `mobile`, or `router`.
 - `--no-pass`: Skip password protection for the client key.
-- `--archive`: Create a 7z compression of the output directory.
+- `--archive`: Create a zip compression of the output directory.
 
 ---
 

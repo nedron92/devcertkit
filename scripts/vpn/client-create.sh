@@ -16,7 +16,7 @@ SCRIPT_NAME="$(basename "$0")"
 export EASYRSA_PKI="${VPN_PKI_DIR}"
 
 TYPE="general"  	# set type (general | mobile | router), DEFAULT: general
-ARCHIVE="false"   # if true -> create 7z
+ARCHIVE="false"   # if true -> create zip
 NO_PASS="false"  	# if true, create cert without a password
 
 # -----------------------------
@@ -80,7 +80,7 @@ Usage: ./devcertkit vpn client create [OPTIONS] <clientName>
 Options:
   -t, --type <type>      Client type: general | mobile | router (default: general).
       --no-pass          Create the client certificate without a password.
-      --archive          Create a 7z archive of the output.
+      --archive          Create a zip archive of the output.
       --vpn-port <port>  Override the VPN server port in the client config (default: 1194).
   -h, --help             Show this help message.
 
@@ -174,9 +174,9 @@ ensure_environment() {
     fail "VPN PKI not initialized. Please run 'devcertkit vpn init' at first."
   fi
 
-  # If archiving is enabled, ensure 7z exists
+  # If archiving is enabled, ensure zip exists
   if [[ "${ARCHIVE}" == "true" ]]; then
-    need_cmd "7z"
+    need_cmd "zip"
   fi
 
   prepare_dir "${VPN_OUTPUT_DIR}/${CLIENT_NAME}"
@@ -244,7 +244,7 @@ create_vpn_client() {
   # -----------------------------
   if [[ "$ARCHIVE" == "true" ]]; then
     info "Compressing client directory..."
-    ( cd "$(dirname "${output_dir}")" && 7z a -t7z "${CLIENT_NAME}.7z" "${CLIENT_NAME}" >/dev/null )
+    ( cd "$(dirname "${output_dir}")" && zip -r "${CLIENT_NAME}.zip" "${CLIENT_NAME}" >/dev/null )
   else
     info "Archive skipped."
   fi
