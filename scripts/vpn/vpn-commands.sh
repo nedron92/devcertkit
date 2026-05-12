@@ -50,7 +50,6 @@ check_easyrsa_availability() {
 check_vpn_dependencies() {
   # Checks for dependencies required specifically for VPN operations.
   check_easyrsa_availability
-  need_cmd "openvpn"
 }
 
 # -----------------------------
@@ -89,9 +88,10 @@ run_vpn_init() {
   fi
 
   if [[ ! -f "${VPN_TA_KEY}" ]]; then
-    warn "VPN TLS key (ta.key) is missing."
+    warn "VPN TLS key (ta.key) is missing. (OpenVPN is required to generate it)"
     echo -n "Do you want to generate a new ta.key? (y/N): "
     if read -r response && [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+      need_cmd "openvpn"
       generate_vpn_ta_key
     else
       info "Skipping ta.key generation. You will need to provide it manually."
@@ -140,9 +140,10 @@ _run_vpn_ca_create() {
     create_vpn_ca "${use_pass}"
 
     if [[ ! -f "${VPN_TA_KEY}" ]]; then
-      warn "VPN TLS key (ta.key) is missing."
+      warn "VPN TLS key (ta.key) is missing. (OpenVPN is required to generate it)"
       echo -n "Do you want to generate a new ta.key? (y/N): "
       if read -r response && [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        need_cmd "openvpn"
         generate_vpn_ta_key
       else
         info "Skipping ta.key generation. You will need to provide it manually."
@@ -169,6 +170,7 @@ _run_vpn_ca_info() {
 _run_vpn_gen_tls_key() {
   # Generates a new VPN TLS-AUTH key.
   check_vpn_dependencies
+  need_cmd "openvpn"
   generate_vpn_ta_key
 }
 

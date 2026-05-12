@@ -86,15 +86,19 @@ copy_vpn_ta_key() {
 }
 
 generate_vpn_ta_key() {
-  # Generates a new VPN TLS Auth key (ta.key) using EasyRSA.
-  # It then copies the generated key from PKI to the configuration directory.
+  # Generates a new VPN TLS Auth key (ta.key) using OpenVPN.
+  # It then copies the generated key to both the PKI and the configuration directory.
 
   info "Generating new VPN TLS Auth key..."
-  "${EASYRSA_BIN}" gen-tls-auth-key
+  
+  prepare_dir "${VPN_PKI_DIR}/private"
+  local tls_key="${VPN_PKI_DIR}/private/easyrsa-tls.key"
 
-  if [[ -f "${VPN_PKI_DIR}/private/easyrsa-tls.key" ]]; then
+  openvpn --genkey --secret "${tls_key}"
+
+  if [[ -f "${tls_key}" ]]; then
     info "Copying generated TLS key to ${VPN_TA_KEY}..."
-    cp -f "${VPN_PKI_DIR}/private/easyrsa-tls.key" "${VPN_TA_KEY}"
+    cp -f "${tls_key}" "${VPN_TA_KEY}"
     info "VPN TLS key generated and copied to config."
   else
     fail "Failed to generate VPN TLS key."
