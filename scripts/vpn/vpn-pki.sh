@@ -51,6 +51,40 @@ copy_vpn_vars() {
   cp -f "${vars_file}" "${pki_dir}/vars"
 }
 
+copy_vpn_ta_key() {
+  # Imports the VPN TLS Auth key (ta.key) into the PKI.
+  # EasyRSA 3.1+ provides 'import-tls-key' for this purpose.
+  # It copies the key to 'pki/private/easyrsa-tls.key'.
+
+  if [[ -f "${VPN_TA_KEY}" ]]; then
+    local source_key="${VPN_TA_KEY}"
+    local temp_key
+
+    # EasyRSA might not recognize the standard OpenVPN static key header
+    # for inline configuration generation. We ensure it has a header
+    # that EasyRSA recognizes (TLS-AUTH or TLS-CRYPT).
+    if grep -q "BEGIN OpenVPN Static key V1" "${source_key}" && ! grep -q "BEGIN TLS-AUTH" "${source_key}"; then
+        info "Transforming TLS key header for EasyRSA compatibility..."
+        temp_key=$(mktemp)
+        echo "-----BEGIN TLS-AUTH-----" > "${temp_key}"
+        grep -v "^#" "${source_key}" | grep -v "BEGIN OpenVPN Static key V1" | grep -v "END OpenVPN Static key V1" | sed '/^[[:space:]]*$/d' >> "${temp_key}"
+        echo "-----END TLS-AUTH-----" >> "${temp_key}"
+        source_key="${temp_key}"
+    fi
+
+    info "Importing VPN TLS key into PKI..."
+    # We use EasyRSA's import-tls-key command.
+    "${EASYRSA_BIN}" import-tls-key "${source_key}"
+
+    # Cleanup temp key if created
+    if [[ -n "${temp_key}" && -f "${temp_key}" ]]; then
+        rm -f "${temp_key}"
+    fi
+  else
+    warn "VPN TLS key (ta.key) not found at ${VPN_TA_KEY}. Inline configs might be incomplete."
+  fi
+}
+
 init_vpn_pki_structure() {
   # Initializes the EasyRSA PKI structure for VPN.
   # It sets up the directory structure and copies the VPN vars file.
@@ -60,6 +94,7 @@ init_vpn_pki_structure() {
   local force="${1:-false}"
   init_pki_structure "${VPN_PKI_DIR}" "${VPN_PKI_PRIVATE_DIR}" "vpn" "${force}"
   copy_vpn_vars "${VPN_PKI_DIR}"
+  copy_vpn_ta_key
 }
 
 import_vpn_ca() {
@@ -79,6 +114,7 @@ import_vpn_ca() {
   fi
 
   copy_vpn_vars "${VPN_PKI_DIR}"
+  copy_vpn_ta_key
   import_ca "${VPN_CONFIG_DIR}" "${VPN_PKI_DIR}" "${VPN_PKI_PRIVATE_DIR}"
 }
 
@@ -86,6 +122,7 @@ create_vpn_ca() {
   # Creates a new VPN Certificate Authority and saves it to the configuration directory.
 
   copy_vpn_vars "${VPN_PKI_DIR}"
+  copy_vpn_ta_key
   build_new_ca "${VPN_CONFIG_DIR}" "${VPN_PKI_DIR}" "${VPN_PKI_PRIVATE_DIR}"
 }
 
@@ -95,6 +132,7 @@ prepare_vpn_ca() {
   # or creating a new one if it doesn't exist.
 
   copy_vpn_vars "${VPN_PKI_DIR}"
+  copy_vpn_ta_key
   prepare_ca "${VPN_CONFIG_DIR}" "${VPN_PKI_DIR}" "${VPN_PKI_PRIVATE_DIR}"
   copy_vpn_vars "${VPN_PKI_DIR}"
 }
