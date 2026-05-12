@@ -9,10 +9,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../common/paths.sh"
 # shellcheck source=../common/shared.sh
 source "${SCRIPT_DIR}/../common/shared.sh"
-# shellcheck source=../vpn/vpn-pki.sh
-source "${SCRIPT_DIR}/vpn-pki.sh"
 
 SCRIPT_NAME="$(basename "$0")"
+
+# Keep the VPN PKI location explicit for all VPN commands.
+export EASYRSA_PKI="${VPN_PKI_DIR}"
 
 VPN_CONFIG_FILE="${CONFIG_DIR}/vpn.settings"
 
@@ -150,10 +151,6 @@ ensure_environment() {
   check_file "$VPN_CA_KEY"
   check_file "$VPN_TA_KEY"
 
-  local vars_file
-  vars_file="$(get_vpn_vars_file)"
-  check_file "$vars_file"
-
   case "$TYPE" in
     general|mobile|router) ;;
     *) fail "Invalid type: $TYPE (allowed: general, mobile, router)" ;;
@@ -180,11 +177,6 @@ ensure_environment() {
   fi
 
   prepare_dir "${VPN_OUTPUT_DIR}/${CLIENT_NAME}"
-
-  # Ensure vars file is used
-  if [[ ! -f "$VPN_PKI_DIR/vars" ]]; then
-      copy_vpn_vars "$VPN_PKI_DIR"
-  fi
 }
 
 # -----------------------------
