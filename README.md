@@ -1,6 +1,7 @@
 # devcertkit
 
-devcertkit is a simple toolkit for generating internal SSL certificates and VPN infrastructure artifacts (OpenVPN) using your own private Certificate Authority (CA).
+devcertkit is a simple toolkit-wrapper for EasyRSA.
+Generating internal SSL certificates and VPN infrastructure artifacts (OpenVPN) using your own private Certificate Authority (CA).
 
 **Note:** This toolkit is designed to simplify both SSL and VPN certificate/config management. While SSL is fully functional, VPN features are currently in development and will be implemented soon.
 
