@@ -89,16 +89,6 @@ create_ssl_ca() {
   build_new_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
 }
 
-prepare_ssl_ca() {
-  # Orchestrates the preparation of the SSL CA.
-  # It ensures that the CA exists in the PKI, either by importing it
-  # or creating a new one if it doesn't exist.
-
-  copy_ssl_vars "${SSL_PKI_DIR}"
-  prepare_ca "${SSL_CONFIG_DIR}" "${SSL_PKI_DIR}" "${SSL_PKI_PRIVATE_DIR}"
-  copy_ssl_vars "${SSL_PKI_DIR}"
-}
-
 clear_ssl_pki() {
   # Deletes the entire SSL PKI directory.
   # This effectively resets the SSL PKI state.

@@ -15,8 +15,6 @@ SCRIPT_NAME="$(basename "$0")"
 # Keep the VPN PKI location explicit for all VPN commands.
 export EASYRSA_PKI="${VPN_PKI_DIR}"
 
-VPN_CONFIG_FILE="${CONFIG_DIR}/vpn.settings"
-
 TYPE="general"  	# set type (general | mobile | router), DEFAULT: general
 ARCHIVE="true"   	# if false -> skip 7z
 NO_PASS="false"  	# if true, create cert without a password
@@ -139,10 +137,10 @@ ensure_environment() {
   # Verifies that all necessary tools and directories are available before
   # proceeding with certificate creation. Fails if requirements are not met.
 
-  # Check configuration files
-  check_file "$VPN_CONFIG_FILE"
+  # Check settings files
+  check_file "$VPN_SETTINGS_FILE"
   # shellcheck source=/dev/null
-  source "$VPN_CONFIG_FILE"
+  source "$VPN_SETTINGS_FILE"
 
   VPN_HOST="$(get_active_vpn_host)"
 
@@ -165,11 +163,6 @@ ensure_environment() {
   if [[ ! -d "${VPN_PKI_DIR}" || ! -d "${VPN_PKI_PRIVATE_DIR}" ]]; then
     fail "VPN PKI not initialized. Please run 'devcertkit vpn init' at first."
   fi
-
-  # Check configuration files
-  check_file "$VPN_CONFIG_FILE"
-  # shellcheck source=/dev/null
-  source "$VPN_CONFIG_FILE"
 
   # If archiving is enabled, ensure 7z exists
   if [[ "${ARCHIVE}" == "true" ]]; then

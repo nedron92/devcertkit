@@ -1,6 +1,17 @@
-# VPN configuration
+# VPN Configuration Settings
+# This file is used to generate OpenVPN client configurations.
+# Copy this file to 'vpn.settings' and adjust the values.
+
+# List of VPN Server Hosts (IP or FQDN)
+# The first active entry will be used.
 VPN_HOSTS=(
   "xx.xxx.xx.xxx"
 )
+
+# --- Default Connection (UDP) ---
+# Recommended for best performance.
 VPN_PORT="1194"
+
+# --- Fallback Connection (TCP) ---
+# Used when UDP is blocked (e.g., in restrictive networks).
 VPN_PORT_FALLBACK="8443"

@@ -94,7 +94,6 @@ init_vpn_pki_structure() {
   local force="${1:-false}"
   init_pki_structure "${VPN_PKI_DIR}" "${VPN_PKI_PRIVATE_DIR}" "vpn" "${force}"
   copy_vpn_vars "${VPN_PKI_DIR}"
-  copy_vpn_ta_key
 }
 
 import_vpn_ca() {
@@ -124,17 +123,6 @@ create_vpn_ca() {
   copy_vpn_vars "${VPN_PKI_DIR}"
   copy_vpn_ta_key
   build_new_ca "${VPN_CONFIG_DIR}" "${VPN_PKI_DIR}" "${VPN_PKI_PRIVATE_DIR}"
-}
-
-prepare_vpn_ca() {
-  # Orchestrates the preparation of the VPN CA.
-  # It ensures that the CA exists in the PKI, either by importing it
-  # or creating a new one if it doesn't exist.
-
-  copy_vpn_vars "${VPN_PKI_DIR}"
-  copy_vpn_ta_key
-  prepare_ca "${VPN_CONFIG_DIR}" "${VPN_PKI_DIR}" "${VPN_PKI_PRIVATE_DIR}"
-  copy_vpn_vars "${VPN_PKI_DIR}"
 }
 
 clear_vpn_pki() {
