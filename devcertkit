@@ -29,6 +29,8 @@ source "${SCRIPT_DIR}/scripts/common/paths.sh"
 source "${SCRIPT_DIR}/scripts/common/easyrsa-prepare.sh"
 # shellcheck source=./scripts/ssl/ssl-commands.sh
 source "${SCRIPT_DIR}/scripts/ssl/ssl-commands.sh"
+# shellcheck source=./scripts/vpn/vpn-commands.sh
+source "${SCRIPT_DIR}/scripts/vpn/vpn-commands.sh"
 
 # -----------------------------
 # Helper
@@ -46,6 +48,7 @@ It simplifies PKI management using EasyRSA as a backend.
 Commands:
   init        Initializes the workspace, resolves EasyRSA, and prepares the environment.
   ssl         SSL-specific commands (init, ca, cert)
+  vpn         VPN-specific commands (init, ca, client)
   version     Show the current version
   help        Show this help message
 
@@ -57,6 +60,8 @@ Options:
 Examples:
   ./devcertkit init
   ./devcertkit ssl init
+  ./devcertkit vpn init
+  ./devcertkit vpn help
   ./devcertkit ssl help
 EOF
 }
@@ -158,6 +163,9 @@ case "${MAIN_CMD}" in
     ;;
   ssl)
     run_ssl_commands "$@"
+    ;;
+  vpn)
+    run_vpn_commands "$@"
     ;;
   version|-v|--version)
     show_version

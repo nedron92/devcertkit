@@ -32,7 +32,7 @@ get_vpn_vars_file() {
   elif [[ -f "${VPN_VARS_FILE_DEFAULT}" ]]; then
     vars_file="${VPN_VARS_FILE_DEFAULT}"
   else
-    fail "No SSL vars file found. Expected either ${VPN_VARS_FILE} or ${VPN_VARS_FILE_DEFAULT}."
+    fail "No VPN vars file found. Expected either ${VPN_VARS_FILE} or ${VPN_VARS_FILE_DEFAULT}."
   fi
 
   echo "${vars_file}"
