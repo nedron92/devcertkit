@@ -20,7 +20,7 @@ Managing internal SSL and VPN configurations directly via OpenSSL or EasyRSA can
 
 - **Unified PKI Management:** Separate or shared PKIs for SSL and VPN.
 - **Advanced SSL Support:** Multi-domain SAN, Wildcards, and PEM bundle creation.
-- **VPN Ready:** Fully functional OpenVPN CA management and client configuration generation (`.ovpn`).
+- **VPN Ready:** Fully functional OpenVPN CA management, client configuration generation (`.ovpn`), and server configuration templates.
 - **Device Compatibility:** Specific output modes for OpenWRT (uhttpd), mobile devices, and routers.
 - **Automated Workflows:** Workspace-based structure with automatic CA creation or existing CA import.
 
@@ -38,6 +38,7 @@ Managing internal SSL and VPN configurations directly via OpenSSL or EasyRSA can
 ### VPN Management
 - Full OpenVPN CA and PKI management.
 - Automated client certificate and `.ovpn` config generation.
+- Server configuration templates (UDP/TCP fallback).
 - Multiple client templates: `general`, `mobile`, `router`.
 - Automatic inclusion of necessary keys (ca.crt, ta.key) in client packages.
 
@@ -85,6 +86,7 @@ Ensure the following tools are installed:
 - **Wildcard:** `./devcertkit ssl cert create -d *.example.home`
 - **OpenWRT:** `./devcertkit ssl cert create --openwrt -d config.router`
 - **PEM Bundle:** `./devcertkit ssl cert create --create-pem -d mail.home`
+- **Include CA:** `./devcertkit ssl cert create --include-ca -d mail.home`
 
 **Information:**
 ```bash
@@ -99,24 +101,35 @@ Ensure the following tools are installed:
 ```
 
 **CA Management:**
-- `vpn ca create`: Create a new VPN CA.
+- `vpn ca create`: Create a new VPN CA (passwordless by default).
+- `vpn ca create --pass`: Create a new VPN CA with a password.
 - `vpn ca info`: Display details about the VPN CA.
 - `vpn ca import`: Import an existing CA from `config/ca/vpn`.
+- `vpn ca gen-tls`: Generate a new OpenVPN TLS-AUTH key (`ta.key`).
 
 **Client Creation:**
 Generate a client configuration and certificates:
 ```bash
-# General client
+# General client (with password prompt for the key)
 ./devcertkit vpn client create my-client
+
+# Mobile client (no password)
+./devcertkit vpn client create -t mobile --no-pass my-phone
 
 # Router-specific client (no password)
 ./devcertkit vpn client create -t router --no-pass my-router
 ```
 
 **Options for client creation:**
-- `-t, --type <type>`: `general`, `mobile`, or `router`.
+- `-t, --type <type>`: `general`, `mobile`, or `router` (default: `general`).
 - `--no-pass`: Skip password protection for the client key.
 - `--archive`: Create a zip compression of the output directory.
+- `--vpn-port <port>`: Override the VPN server port in the client config.
+
+**Information:**
+```bash
+./devcertkit vpn client info my-client
+```
 
 ---
 
@@ -133,8 +146,8 @@ Generate a client configuration and certificates:
 # Planned Features
 
 Planned improvements include:
-- [ ] automatic EasyRSA download, if not available
 - [ ] OpenVPN server-config creation
+- [ ] automatic EasyRSA download, if not available
 
 ---
 ## Credits
