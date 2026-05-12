@@ -22,16 +22,16 @@ show_ssl_help() {
 Usage: ./devcertkit ssl <command> [options]
 
 Commands:
-  init              Initialize SSL PKI structure and prepare CA
-  ca create         Create a new SSL CA
-  ca import         Import an existing SSL CA from config
-  ca info           Display information about the SSL CA
-  cert create       Create a new SSL certificate
-  cert info         Display information about an existing certificate
-  clean             Delete the SSL PKI directory
-  help              Show this help message
+  init              Initialize SSL PKI structure and prepare CA.
+  ca create         Create a new SSL CA (interactively).
+  ca import         Import an existing SSL CA from config/ca/ssl/.
+  ca info           Display information about the SSL CA.
+  cert create       Create a new SSL certificate signed by the CA.
+  cert info         Display information about an existing certificate.
+  clean             Delete the SSL PKI directory.
+  help              Show this help message.
 
-Run './devcertkit ssl <command> --help' for more information on a command.
+Run './devcertkit ssl <command> help' for more information on a command.
 EOF
 }
 

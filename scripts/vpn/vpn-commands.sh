@@ -22,16 +22,16 @@ show_vpn_help() {
 Usage: ./devcertkit vpn <command> [options]
 
 Commands:
-  init              Initialize VPN PKI structure and prepare CA
-  ca create         Create a new VPN CA
-  ca import         Import an existing VPN CA from config
-  ca info           Display information about the VPN CA
-  client create     Create a new VPN client with config-file and certificates
-  client info       Display information about an existing VPN client certificate
-  clean             Delete the VPN PKI directory
-  help              Show this help message
+  init              Initialize VPN PKI structure and prepare CA.
+  ca create         Create a new VPN CA (interactively).
+  ca import         Import an existing VPN CA from config/ca/vpn/.
+  ca info           Display information about the VPN CA.
+  client create     Create a new VPN client with config and certificates.
+  client info       Display information about an existing VPN client.
+  clean             Delete the VPN PKI directory.
+  help              Show this help message.
 
-Run './devcertkit vpn <command> --help' for more information on a command.
+Run './devcertkit vpn <command> help' for more information on a command.
 EOF
 }
 

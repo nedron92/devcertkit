@@ -40,29 +40,32 @@ show_help() {
   # listing available commands and global options.
 
   cat <<EOF
-Usage: ./devcertkit <command> [options]
+devcertkit - A simplified toolkit for managing development and internal certificates.
 
-devcertkit is a helper toolkit for managing internal SSL/VPN certificates.
-It simplifies PKI management using EasyRSA as a backend.
+Usage:
+  ./devcertkit <command> [options]
 
 Commands:
-  init        Initializes the workspace, resolves EasyRSA, and prepares the environment.
-  ssl         SSL-specific commands (init, ca, cert)
-  vpn         VPN-specific commands (init, ca, client)
-  version     Show the current version
-  help        Show this help message
+  init              Initialize the workspace, resolve EasyRSA, and prepare environment.
+  ssl <cmd>         Manage SSL certificates (e.g., init, ca, cert).
+  vpn <cmd>         Manage VPN certificates (e.g., init, ca, client).
+  version           Show the current version.
+  help              Show this help message.
 
-Options:
-  -h, --help               Show this help message
-  -v, --version            Show the current version
-  --easyrsa-path <path>    Path to the installed EasyRSA directory
+Global Options:
+  -h, --help               Show this help message.
+  -v, --version            Show the current version.
+  --easyrsa-path <path>    Override the path to the EasyRSA directory.
 
 Examples:
   ./devcertkit init
-  ./devcertkit ssl init
-  ./devcertkit vpn init
+  ./devcertkit ssl cert create -d example.com
+  ./devcertkit vpn client create my-client
   ./devcertkit vpn help
   ./devcertkit ssl help
+
+For more information on a specific command, use:
+  ./devcertkit <command> help
 EOF
 }
 

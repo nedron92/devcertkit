@@ -46,42 +46,32 @@ show_help() {
 Usage: ./devcertkit ssl cert create [OPTIONS]
 
 Options:
-  -d, --domain <name>     Domain name for the certificate. Repeat for altNames.
-      --wildcard          Also include wildcard for the *first* domain (e.g. *.example.com).
-      --openwrt           Rename output files to OpenWrt/uhttpd defaults:
-                          uhttpd.crt and uhttpd.key (instead of <domain>.crt/.key).
-      --include-ca        Also copy ca.crt into the output directory (default: false).
-      --create-pem        Create an additional PEM bundle (cert + key, CA not included by default).
-      --batch             Run EasyRSA in batch mode (non-interactive) if supported.
-      --no-archive        Do not create a 7z archive.
-      --out-dir <path>    Output directory (default: ${SSL_OUTPUT_DIR})
-      --ca-dir <path>     Existing CA directory (default: ${SSL_CONFIG_DIR})
+  -d, --domain <name>     Domain name for the certificate. Repeat for SANs (altNames).
+      --wildcard          Include a wildcard for the *first* domain (e.g., *.example.com).
+      --openwrt           Rename output files to OpenWrt/uhttpd defaults (uhttpd.crt/key).
+      --include-ca        Include the CA certificate (ca.crt) in the output directory.
+      --create-pem        Create a combined PEM bundle (cert + key).
+      --batch             Run EasyRSA in batch mode (non-interactive).
+      --no-archive        Do not create a 7z archive of the output.
+      --out-dir <path>    Specify a custom output directory (default: ${SSL_OUTPUT_DIR}).
+      --ca-dir <path>     Specify an existing CA directory (default: ${SSL_CONFIG_DIR}).
   -h, --help              Show this help message.
 
 Examples:
-  # Simple cert (CN=example.com)
+  # Create a certificate for a single domain
   ./devcertkit ssl cert create -d example.com
 
-  # With additional SAN
-  ./devcertkit ssl cert create -d example.com -d www.example.com
+  # Create a certificate with multiple SANs
+  ./devcertkit ssl cert create -d example.com -d www.example.com -d mail.example.com
 
-  # Wildcard for first domain (CN=*.example.com, SAN includes example.com + *.example.com)
+  # Create a wildcard certificate (CN=*.example.com, SANs include example.com)
   ./devcertkit ssl cert create --wildcard -d example.com
 
-  # OpenWrt uhttpd filenames (uhttpd.crt/uhttpd.key)
-  ./devcertkit ssl cert create --openwrt -d example.com
+  # Create a certificate for OpenWrt with CA included and PEM bundle
+  ./devcertkit ssl cert create -d router.home --openwrt --include-ca --create-pem
 
-  # OpenWrt + include CA cert
-  ./devcertkit ssl cert create --openwrt --include-ca -d example.com
-
-  # Custom output directory, skip archive
-  ./devcertkit ssl cert create --out-dir ../certs --no-archive -d example.com
-
-  # Create cert, key and PEM bundle (PEM contains cert + key + CA)
-  ./devcertkit ssl cert create -d example.com --create-pem --include-ca
-
-  # Create cert + key + PEM bundle (without CA certificate)
-  ./devcertkit ssl cert create -d example.com --create-pem
+  # Custom output directory and skip archiving
+  ./devcertkit ssl cert create -d dev.local --out-dir ./my-certs --no-archive
 EOF
 }
 

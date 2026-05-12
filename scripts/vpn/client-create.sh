@@ -72,22 +72,32 @@ patch_ovpn_client_placeholders() {
 }
 
 show_help() {
+  # Displays the help message for the client-create.sh script.
+
   cat <<EOF
-Usage: ./devcertkit vpn client create [OPTIONS] clientName
+Usage: ./devcertkit vpn client create [OPTIONS] <clientName>
 
 Options:
-  -t, --type <type>      Client type: general | mobile | router (default: general)
-      --no-pass          Create client certificate without a password.
-      --no-archive       Do not create a 7z archive.
-      --vpn-port <port>  VPN server port used in client config (default: 1194)
+  -t, --type <type>      Client type: general | mobile | router (default: general).
+      --no-pass          Create the client certificate without a password.
+      --no-archive       Do not create a 7z archive of the output.
+      --vpn-port <port>  Override the VPN server port in the client config (default: 1194).
   -h, --help             Show this help message.
 
-Examples:
-  # General client with password
-  ./devcertkit vpn client create ovpn-connector-xxx
+Client Types:
+  general                Generates default and fallback (.ovpn) configurations.
+  mobile                 Generates a single (.ovpn) configuration optimized for mobile devices.
+  router                 Generates a (.conf) configuration for routers (e.g., OpenWrt).
 
-  # Router client without password
-  ./devcertkit vpn client create -t router --no-pass router-xxx
+Examples:
+  # Create a general client with a password prompt
+  ./devcertkit vpn client create my-laptop
+
+  # Create a mobile client without a password
+  ./devcertkit vpn client create -t mobile --no-pass my-phone
+
+  # Create a router client with a specific port
+  ./devcertkit vpn client create -t router --vpn-port 1195 my-router
 EOF
 }
 
