@@ -1,228 +1,132 @@
 # devcertkit
 
-devcertkit is a simple toolkit-wrapper for EasyRSA.
-Generating internal SSL certificates and VPN infrastructure artifacts (OpenVPN) using your own private Certificate Authority (CA).
-
-**Note:** This toolkit is designed to simplify both SSL and VPN certificate/config management. While SSL is fully functional, VPN features are currently in development and will be implemented soon.
+`devcertkit` is a simple toolkit wrapper for EasyRSA.  
+It streamlines the management of internal SSL certificates and VPN infrastructure (OpenVPN) using your own private Certificate Authority (CA).
 
 Built for:
-- homelabs
-- selfhosted services
-- internal HTTPS environments
-- VPN-connected infrastructure (OpenVPN)
-- development and testing environments
+- Homelabs and self-hosted services
+- Internal HTTPS environments
+- Secure remote access (OpenVPN)
+- Development and testing workflows
 
-This project is based on a collection of private helper scripts originally created in 2023 and continuously improved over time for real-world usage.
-
----
-
-# Why?
-
-Managing internal SSL certificates and VPN configurations manually using OpenSSL or EasyRSA can quickly become frustrating and error-prone.
-
-Especially for setups like:
-- `git.home`
-- `admin.home`
-- `config.router`
-
-or internal VPN-connected services where proper HTTPS should still exist and secure remote access is required.
-
-This project aims to simplify:
-- certificate generation (SSL & VPN)
-- SAN handling & wildcard certificates
-- PEM bundle creation
-- OpenWRT/uhttpd compatibility
-- OpenVPN client & server config management (Planned)
-- internal infrastructure workflows
-
-without fighting OpenSSL or EasyRSA commands directly.
+This project is based on a collection of private helper scripts and has been refined for ease of use and real-world reliability.
 
 ---
 
-# Features
+## Why devcertkit?
 
-### SSL (Current)
-- EasyRSA-based certificate generation
-- Support for multiple SAN domains & Wildcards
-- OpenWRT/uhttpd output mode
-- Optional PEM bundle & CA bundle creation
-- Output packaging via 7z
+Managing internal SSL and VPN configurations directly via OpenSSL or EasyRSA can be complex and error-prone.  
+`devcertkit` abstracts this complexity, making it easier to handle:  
 
-### VPN (Planned / In Progress)
-- OpenVPN CA and PKI management
-- Simplified client certificate & config generation (.ovpn)
-- Client / Server configuration helpers
-- Workspace-based client management
+- **Unified PKI Management:** Separate or shared PKIs for SSL and VPN.
+- **Advanced SSL Support:** Multi-domain SAN, Wildcards, and PEM bundle creation.
+- **VPN Ready:** Fully functional OpenVPN CA management and client configuration generation (`.ovpn`).
+- **Device Compatibility:** Specific output modes for OpenWRT (uhttpd), mobile devices, and routers.
+- **Automated Workflows:** Workspace-based structure with automatic CA creation or existing CA import.
+
+---
+
+## Features
+
+### SSL Management
+- EasyRSA-based certificate generation.
+- Support for Subject Alternative Names (SAN) and Wildcards.
+- OpenWRT/uhttpd compatibility mode.
+- Optional PEM and CA bundle creation.
+- Automated packaging of certificates via 7z.
+
+### VPN Management
+- Full OpenVPN CA and PKI management.
+- Automated client certificate and `.ovpn` config generation.
+- Multiple client templates: `general`, `mobile`, `router`.
+- Automatic inclusion of necessary keys (ca.crt, ta.key) in client packages.
 
 ### General
-- Workspace-based structure (Runtime/output separation)
-- Automatic workspace initialization
-- Automatic CA creation or existing CA import
-- EasyRSA backend resolution and setup handling
+- Workspace-based structure for clean separation of runtime and output.
+- Automatic EasyRSA backend resolution and setup.
+- Flexible configuration via settings files.
 
 ---
 
-# Project Status
+## Installation & Requirements
 
-This project is currently in an early restructuring phase.
-
-**Current State:**
-- SSL management is **functional** and used in real-world private environments.
-- VPN management is **planned** (porting existing scripts from 2023).
-- Codebase is being cleaned up and generalized for public usage.
-
-Expect:
-- breaking changes
-- restructuring
-- missing documentation
-- rough edges
-
-during the initial development phase.
-
----
-
-# Requirements
-
-Currently required:
+### Prerequisites
+Ensure the following tools are installed:
 - Bash
 - OpenSSL
-- 7z
-- EasyRSA backend (automatically resolved or provided manually)
+- 7z (for packaging)
 
-The toolkit handles:
-- Automatic workspace initialization
-- Automatic CA creation or existing CA import
-- Backend resolution and setup handling
-
----
-
-# Current Workspace Structure
-
-```text
-devcertkit             # Main entry point
-
-config/
-  ca/
-    ssl/               # CA for SSL certificates (ca.crt, ca.key)
-    vpn/               # CA for VPN (planned)
-  easyrsa/             # EasyRSA vars and configurations
-
-runtime/
-  .easyrsa/            # Symlink to EasyRSA backend
-  ssl/pki/             # Internal EasyRSA PKI for SSL
-  vpn/pki/             # Internal EasyRSA PKI for VPN (planned)
-
-output/
-  certs/               # Generated SSL certificates
-  clients/             # Generated VPN clients (planned)
-
-scripts/
-  common/              # Shared helper scripts
-  ssl/                 # SSL certificate creation toolkit
-```
+### Setup
+1. Clone the repository.
+2. Initialize the workspace:
+   ```bash
+   ./devcertkit init
+   ```
+   This command prepares the environment and resolves the EasyRSA backend.
 
 ---
 
-# Example Usage
+## Usage
 
-Initialize the workspace and setup EasyRSA:
+### SSL Management
 
-```bash
-./devcertkit init
-```
-
-### SSL Management (Current)
-
-Initialize SSL PKI structure and prepare the CA (imports existing or offers to create a new one):
-
+**Initialize SSL PKI:**
 ```bash
 ./devcertkit ssl init
 ```
 
-#### CA Management
+**CA Management:**
+- `ssl ca create`: Interactively create a new SSL CA.
+- `ssl ca info`: Display details about the current SSL CA.
+- `ssl ca import`: Import an existing CA from `config/ca/ssl`.
 
-Create a new CA interactively (re-initializes SSL PKI):
+**Certificate Generation:**
+- **Standard:** `./devcertkit ssl cert create -d git.home`
+- **Wildcard:** `./devcertkit ssl cert create -d *.example.home`
+- **OpenWRT:** `./devcertkit ssl cert create --openwrt -d config.router`
+- **PEM Bundle:** `./devcertkit ssl cert create --create-pem -d mail.home`
 
-```bash
-./devcertkit ssl ca create
-```
-
-Import an existing CA from `config/ca/ssl`:
-
-```bash
-./devcertkit ssl ca import
-```
-
-Show information about the current SSL CA:
-
-```bash
-./devcertkit ssl ca info
-```
-
-#### Certificate Management
-
-Generate a simple certificate:
-
-```bash
-./devcertkit ssl cert create -d git.home
-```
-
-Generate wildcard certificate (autodetects wildcard if `-d` starts with `*.`):
-
-```bash
-./devcertkit ssl cert create -d *.example.home
-# or explicitly:
-./devcertkit ssl cert create --wildcard -d example.home
-```
-
-Generate OpenWRT/uhttpd compatible files:
-
-```bash
-./devcertkit ssl cert create \
-  --openwrt \
-  --include-ca \
-  -d config.router
-```
-
-Create PEM bundle (cert + key + optional CA):
-
-```bash
-./devcertkit ssl cert create \
-  --create-pem \
-  --include-ca \
-  -d mail.home
-```
-
-Show information about a generated certificate:
-
+**Information:**
 ```bash
 ./devcertkit ssl cert info git.home
-# or by file path:
-./devcertkit ssl cert info --file /path/to/cert.crt
-# short output (expiration only):
-./devcertkit ssl cert info git.home --short
 ```
 
-### VPN Management (Upcoming)
+### VPN Management
 
-*Commands for VPN management are currently being ported.*
+**Initialize VPN PKI:**
+```bash
+./devcertkit vpn init
+```
+
+**CA Management:**
+- `vpn ca create`: Create a new VPN CA.
+- `vpn ca info`: Display details about the VPN CA.
+- `vpn ca import`: Import an existing CA from `config/ca/vpn`.
+
+**Client Creation:**
+Generate a client configuration and certificates:
+```bash
+# General client
+./devcertkit vpn client create my-client
+
+# Router-specific client (no password)
+./devcertkit vpn client create -t router --no-pass my-router
+```
+
+**Options for client creation:**
+- `-t, --type <type>`: `general`, `mobile`, or `router`.
+- `--no-pass`: Skip password protection for the client key.
+- `--no-archive`: Skip 7z compression.
 
 ---
 
-# Main Commands
+## Project Structure
 
-- `init`: Setup the workspace and link EasyRSA.
-- `version`: Show the current version.
-- `help`: Show main help message.
-- `ssl init`: Setup the SSL PKI structure.
-- `ssl ca create`: Create a new SSL CA.
-- `ssl ca import`: Import SSL CA from config.
-- `ssl ca info`: Show information about the SSL CA.
-- `ssl cert create`: Generate and sign new SSL certificates.
-- `ssl cert info`: Show information about a generated certificate.
-
-Run `./devcertkit help`, `./devcertkit version` or `./devcertkit ssl help` for more details.
-Individual command help is available via `./devcertkit ssl cert create --help` (after initialization).
+- `devcertkit`: Main entry point.
+- `config/`: Configuration files and templates.
+- `runtime/`: Internal PKI and EasyRSA backend.
+- `output/`: Generated certificates and client packages.
+- `scripts/`: Implementation details for SSL and VPN commands.
 
 ---
 
@@ -230,13 +134,12 @@ Individual command help is available via `./devcertkit ssl cert create --help` (
 
 Planned improvements include:
 - [ ] automatic EasyRSA download, if not available
-- [ ] OpenVPN client tooling (originally created in 2023, needs refactoring)
-- [ ] better configuration management
+- [ ] OpenVPN server-config creation
 
 ---
-# License
 
-This project is currently in an early development stage.
-Licensing will be clarified before v1.0.0.
+## License
 
-EasyRSA itself is licensed separately by the OpenVPN community.
+This project is currently in development.  
+Licensing terms will be finalized before v1.0.0.  
+EasyRSA is licensed separately by the OpenVPN community.
