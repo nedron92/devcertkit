@@ -1,6 +1,6 @@
 # devcertkit
 
-`devcertkit` is a simple toolkit wrapper for EasyRSA.  
+`devcertkit` is a simple toolkit wrapper for [EasyRSA](https://github.com/OpenVPN/easy-rsa).  
 It streamlines the management of internal SSL certificates and VPN infrastructure (OpenVPN) using your own private Certificate Authority (CA).
 
 Built for:
@@ -137,9 +137,14 @@ Planned improvements include:
 - [ ] OpenVPN server-config creation
 
 ---
+## Credits
+This project uses [EasyRSA](https://github.com/OpenVPN/easy-rsa)
+for certificate and PKI management.
+
+---
 
 ## License
+MIT License
+Copyright (c) 2026 nedron92
 
-This project is currently in development.  
-Licensing terms will be finalized before v1.0.0.  
-EasyRSA is licensed separately by the OpenVPN community.
+[EasyRSA](https://github.com/OpenVPN/easy-rsa?tab=License-1-ov-file) is licensed separately by the OpenVPN community.
