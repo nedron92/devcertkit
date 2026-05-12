@@ -26,6 +26,7 @@ Commands:
   ca create         Create a new VPN CA (interactively).
   ca import         Import an existing VPN CA from config/ca/vpn/.
   ca info           Display information about the VPN CA.
+  ca gen-tls        Generate OpenVPN TLS-AUTH key (ta.key).
   client create     Create a new VPN client with config and certificates.
   client info       Display information about an existing VPN client.
   clean             Delete the VPN PKI directory.
@@ -79,6 +80,16 @@ run_vpn_init() {
       info "\nSkipping CA creation. You will need to provide CA files manually in ${VPN_CONFIG_DIR} and run 'devcertkit vpn init' again."
     fi
   fi
+
+  if [[ ! -f "${VPN_TA_KEY}" ]]; then
+    warn "VPN TLS key (ta.key) is missing."
+    echo -n "Do you want to generate a new ta.key? (y/N): "
+    if read -r response && [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+      generate_vpn_ta_key
+    else
+      info "Skipping ta.key generation. You will need to provide it manually."
+    fi
+  fi
 }
 
 _run_vpn_ca_import() {
@@ -113,6 +124,16 @@ _run_vpn_ca_create() {
 
     init_vpn_pki_structure "true"
     create_vpn_ca
+
+    if [[ ! -f "${VPN_TA_KEY}" ]]; then
+      warn "VPN TLS key (ta.key) is missing."
+      echo -n "Do you want to generate a new ta.key? (y/N): "
+      if read -r response && [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        generate_vpn_ta_key
+      else
+        info "Skipping ta.key generation. You will need to provide it manually."
+      fi
+    fi
   else
     info "CA creation aborted."
   fi
@@ -129,6 +150,12 @@ _run_vpn_ca_info() {
   info "VPN CA Information"
   # Using the existing cert-info.sh from common directory
   "${VPN_COMMANDS_SCRIPT_DIR}/../common/cert-info.sh" --file "${VPN_CA_CRT}" "$@"
+}
+
+_run_vpn_gen_tls_key() {
+  # Generates a new VPN TLS-AUTH key.
+  check_easyrsa_availability
+  generate_vpn_ta_key
 }
 
 run_vpn_clean() {
@@ -193,6 +220,9 @@ run_vpn_ca_commands() {
     info)
       _run_vpn_ca_info "$@"
       ;;
+    gen-tls)
+      _run_vpn_gen_tls_key "$@"
+      ;;
     -h|--help|help|"?")
       cat <<EOF
 Usage: ./devcertkit vpn ca <command> [options]
@@ -201,6 +231,7 @@ Commands:
   create        Create a new VPN CA (interactively)
   import        Import an existing VPN CA from config/ca/vpn/
   info          Display information about the current VPN CA
+  gen-tls       Generate OpenVPN TLS-AUTH key (ta.key)
 
 Options:
   -h, --help    Show this help message

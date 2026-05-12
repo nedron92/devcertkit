@@ -81,7 +81,23 @@ copy_vpn_ta_key() {
         rm -f "${temp_key}"
     fi
   else
-    warn "VPN TLS key (ta.key) not found at ${VPN_TA_KEY}. Inline configs might be incomplete."
+    warn "VPN TLS key (ta.key) not found at ${VPN_TA_KEY}."
+  fi
+}
+
+generate_vpn_ta_key() {
+  # Generates a new VPN TLS Auth key (ta.key) using EasyRSA.
+  # It then copies the generated key from PKI to the configuration directory.
+
+  info "Generating new VPN TLS Auth key..."
+  "${EASYRSA_BIN}" gen-tls-auth-key
+
+  if [[ -f "${VPN_PKI_DIR}/private/easyrsa-tls.key" ]]; then
+    info "Copying generated TLS key to ${VPN_TA_KEY}..."
+    cp -f "${VPN_PKI_DIR}/private/easyrsa-tls.key" "${VPN_TA_KEY}"
+    info "VPN TLS key generated and copied to config."
+  else
+    fail "Failed to generate VPN TLS key."
   fi
 }
 
